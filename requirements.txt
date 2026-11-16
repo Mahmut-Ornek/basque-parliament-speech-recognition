@@ -2,3 +2,4 @@
 # Every package is pinned to an exact version with ==. Add a line when you install something.
 huggingface_hub==1.33.0
 pytest==9.2.0
+jiwer==4.0.0
