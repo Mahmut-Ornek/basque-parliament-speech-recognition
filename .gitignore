@@ -1,0 +1,19 @@
+# Model weights are never committed (run code, logs and predictions are)
+models/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets (HuggingFace tokens live here)
+.env
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Internal planning notes stay out of the repo
+TASKS*.md
+
+# OS files
+.DS_Store

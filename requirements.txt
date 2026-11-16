@@ -1,0 +1,2 @@
+# Scoring, cleaning and Whisper fine-tuning.
+# Every package is pinned to an exact version with ==. Add a line when you install something.
