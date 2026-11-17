@@ -6,6 +6,7 @@ manifests in `data/raw/manifests/` and are skipped until those files exist.
 """
 import csv
 import io
+import zlib
 import random
 import sys
 import tarfile
@@ -215,7 +216,8 @@ WORDS = ("eta da ez bat hau hori gure legebiltzar talde sailburu andrea jauna es
 
 
 def _row(session: str, start: float, text: str, duration: float | None = None, speaker: str = "7") -> dict:
-    duration = round(len(text) / 14, 2) if duration is None else duration
+    if duration is None:  # speakers differ: 10 to 18 characters per second, fixed per text
+        duration = round(len(text) / (10 + zlib.crc32(text.encode()) % 800 / 100), 2)
     clip_id = f"{session}_{start:.2f}_{start + duration:.2f}"
     return {"clip_id": clip_id, "path": f"data/raw/audio/x/000/{clip_id}.mp3", "text": text,
             "duration": f"{duration:.2f}", "speaker_id": speaker}
@@ -247,8 +249,6 @@ def cleaning_repo(tmp_path) -> dict:
     rng = random.Random(1)
     texts = _sentences(480, rng)
     dev = [_row("12-077_20220211_01", 20.0 * i, t) for i, t in enumerate(texts[:120])]
-    dev[0] = _row("12-077_20220211_01", 0.0, texts[0], duration=round(len(texts[0]) / 9, 2))    # slow speaker
-    dev[1] = _row("12-077_20220211_01", 20.0, texts[1], duration=round(len(texts[1]) / 20, 2))  # fast speaker
     test = [_row("12-078_20220218_01", 20.0 * i, t) for i, t in enumerate(texts[120:180])]
     test[0] = _row("12-078_20220218_01", 0.0, "eskerrik asko", duration=1.0)
     train = [_row(f"11-{i // 50:03d}_2019{1 + i // 50:02d}15_01", 20.0 * (i % 50), t) for i, t in enumerate(texts[180:480])]
@@ -327,6 +327,25 @@ def test_normalise():
     assert clean.normalise("  Eskerrik   ASKO, jauna!  ") == "eskerrik asko jauna"
     assert clean.normalise("ñ") == "ñ"  # NFC
     assert clean.clip_times("12-077_20220211_01_382.04_392.24") == ("12-077_20220211_01", 382.04, 392.24)
+
+
+def test_judge_ignores_digits_and_symbols():
+    assert clean.judge_text("Bozketa: 75 alde, 0 kontra (%100)!") == "bozketa alde kontra"
+    assert clean.has_digit("2022 urtean") and not clean.has_digit("bi mila hogeita bi")
+
+
+def test_speaking_rate_bounds_ignore_one_odd_dev_clip(cleaning_repo):
+    dev = list(cleaning_repo["dev"])
+    odd = _row("12-077_20220211_01", 9000.0, "bat eta bat", duration=9.5)  # 1 char per second
+    th_without = clean.timing_thresholds(dev, None)
+    th_with = clean.timing_thresholds(dev + [odd], None)
+    assert abs(th_with["rate_min"] - th_without["rate_min"]) < 0.5
+
+
+def test_report_splits_judge_removals_by_digits(cleaning_repo):
+    run_clean(cleaning_repo)
+    report = (cleaning_repo["out"] / "data" / "cleaned" / "cleaning_report.md").read_text(encoding="utf-8")
+    assert "| with digits |" in report and "| without digits |" in report
 
 
 def test_each_rule_removes_exactly_the_planted_clips(cleaning_repo):

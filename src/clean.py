@@ -46,7 +46,8 @@ JUDGE_MODEL = "openai/whisper-large-v3"
 ALPHABET = set("abcdefghijklmnopqrstuvwxyzñçáéíóúü ")  # Basque and Spanish letters, and the space
 MAX_COPIES = 3
 NAME_TOLERANCE = 0.02  # seconds; file names and the duration column are rounded to 0.01
-RATE_MARGIN = 0.10  # rule 3 removes a clip only if it is 10% beyond the slowest or fastest dev clip
+RATE_PERCENTILES = (1, 99)  # rule 3 bounds come from these dev percentiles, not from single clips
+RATE_MARGIN = 0.10  # and are widened by 10%
 AUDIO_MARGIN = 0.10  # seconds added to the largest duration gap seen on dev
 MAX_FALSE_LANGUAGE_RATE = 0.01  # rule 6 may remove at most 1% of the (all-Basque) dev clips
 
@@ -84,6 +85,17 @@ def normalise(text: str) -> str:
     text = unicodedata.normalize("NFC", text).lower()
     text = "".join(" " if unicodedata.category(c).startswith("P") else c for c in text)
     return " ".join(text.split())
+
+
+def judge_text(text: str) -> str:
+    """Text compared by the judge rule: normalised, and only letters of the two alphabets kept.
+    The references write numbers as words and Whisper often writes digits, so digits (and
+    symbols such as % or €) are dropped instead of being counted as errors."""
+    return " ".join("".join(c if c in ALPHABET else " " for c in normalise(text)).split())
+
+
+def has_digit(text: str) -> bool:
+    return any(c.isdigit() for c in text)
 
 
 def clip_times(clip_id: str) -> tuple[str, float, float] | None:
@@ -136,6 +148,14 @@ def find_broken_text(rows: list[dict]) -> dict:
     return removed
 
 
+def percentile(sorted_values: list[float], q: float) -> float:
+    """Linear-interpolation percentile of an already sorted list (same as numpy's default)."""
+    pos = (len(sorted_values) - 1) * q / 100
+    lo = int(pos)
+    hi = min(lo + 1, len(sorted_values) - 1)
+    return sorted_values[lo] + (sorted_values[hi] - sorted_values[lo]) * (pos - lo)
+
+
 def speaking_rate(row: dict) -> float:
     return len(normalise(row["text"])) / max(float(row["duration"]), 1e-6)
 
@@ -144,9 +164,10 @@ def timing_thresholds(dev: list[dict], judge_dev: dict | None) -> dict:
     """The range of characters per second on dev, and the largest gap between the duration
     column and the decoded audio on dev. Dev is hand-checked, so everything in it is valid;
     a training clip is removed only if it lies beyond that range by a margin."""
-    rates = [speaking_rate(r) for r in dev if normalise(r["text"])]
-    th = {"dev_rate_min": min(rates), "dev_rate_max": max(rates), "dev_audio_gap": None, "audio_gap": None}
-    th["rate_min"], th["rate_max"] = min(rates) * (1 - RATE_MARGIN), max(rates) * (1 + RATE_MARGIN)
+    rates = sorted(speaking_rate(r) for r in dev if normalise(r["text"]))
+    low, high = (percentile(rates, q) for q in RATE_PERCENTILES)
+    th = {"dev_rate_min": low, "dev_rate_max": high, "dev_audio_gap": None, "audio_gap": None}
+    th["rate_min"], th["rate_max"] = low * (1 - RATE_MARGIN), high * (1 + RATE_MARGIN)
     if judge_dev is not None:
         th["dev_audio_gap"] = max(abs(float(judge_dev[r["clip_id"]]["audio_seconds"]) - float(r["duration"])) for r in dev)
         th["audio_gap"] = th["dev_audio_gap"] + AUDIO_MARGIN
@@ -197,7 +218,7 @@ def find_repeats(rows: list[dict]) -> dict:
 def find_judge_disagreement(rows: list[dict], judge: dict, threshold: float) -> dict:
     removed = {}
     for r in rows:
-        value = cer(normalise(r["text"]), normalise(judge[r["clip_id"]]["hypothesis"]))
+        value = cer(judge_text(r["text"]), judge_text(judge[r["clip_id"]]["hypothesis"]))
         if value > threshold:
             removed[r["clip_id"]] = ("judge_cer", f"{value:.3f}", f"{threshold:.2f}")
     return removed
@@ -219,7 +240,7 @@ def calibrate_cer(dev: list[dict], judge_dev: dict) -> dict:
     """Whisper is weak on Basque, so its CER is high even on good clips. Break the hand-checked
     dev transcripts on purpose in three ways and pick the threshold that best separates broken
     from untouched clips: the one with the largest (catch rate - false removal rate)."""
-    clips = [(normalise(r["text"]), normalise(judge_dev[r["clip_id"]]["hypothesis"])) for r in dev]
+    clips = [(judge_text(r["text"]), judge_text(judge_dev[r["clip_id"]]["hypothesis"])) for r in dev]
     clips = [(ref, hyp) for ref, hyp in clips if ref]
     refs = [ref for ref, _ in clips]
     n = len(clips)
@@ -291,8 +312,16 @@ def clean(train, dev, test, judge_train=None, judge_dev=None):
             "wrong_language": len(find_wrong_language(dev, judge_dev, info["language"]["threshold"])),
         }
     kept, log = list(train), []
-    for step in steps:
+    for number, step in enumerate(steps, start=1):
         removed = step(kept)
+        if number == 5:  # how the judge rule treats clips with and without digits
+            info["judge_by_digits"] = {
+                group: (
+                    sum(has_digit(judge_train[r["clip_id"]]["hypothesis"]) == group for r in kept),
+                    sum(has_digit(judge_train[r["clip_id"]]["hypothesis"]) == group for r in kept if r["clip_id"] in removed),
+                )
+                for group in (True, False)
+            }
         log += [dict(zip(LOG_COLUMNS, (r["clip_id"], *removed[r["clip_id"]]))) for r in kept if r["clip_id"] in removed]
         kept = [r for r in kept if r["clip_id"] not in removed]
     return kept, log, info
@@ -328,8 +357,9 @@ def build_report(train, kept, log, info, authors, outputs) -> str:
     lines += ["## Thresholds (all chosen on dev)", ""]
     t = info["timing"]
     lines.append(
-        f"- Rule 3, characters per second: dev clips range from {t['dev_rate_min']:.2f} to {t['dev_rate_max']:.2f}. "
-        f"A training clip is removed below {t['rate_min']:.2f} or above {t['rate_max']:.2f} ({RATE_MARGIN:.0%} beyond that range)."
+        f"- Rule 3, characters per second: the {RATE_PERCENTILES[0]}st and {RATE_PERCENTILES[1]}th percentiles on dev are "
+        f"{t['dev_rate_min']:.2f} and {t['dev_rate_max']:.2f}. A training clip is removed below {t['rate_min']:.2f} or above "
+        f"{t['rate_max']:.2f} ({RATE_MARGIN:.0%} beyond them)."
     )
     if t["audio_gap"] is not None:
         lines.append(
@@ -343,6 +373,11 @@ def build_report(train, kept, log, info, authors, outputs) -> str:
         f"untouched transcripts is {c['median_cer_untouched']:.3f}. The threshold catches {c['catch_rate']:.1%} of the "
         f"transcripts we broke on purpose ({by_kind}) and removes {c['false_removal_rate']:.1%} of the untouched ones."
     )
+    lines.append(
+        "  Digits and symbols are dropped from both sides before the CER is computed, because the references "
+        "write numbers as words. The number words in the reference still count as deleted, so the table below checks "
+        "whether the rule mostly removes clips with numbers."
+    )
     if lang["threshold"] is None:
         lines.append("- Rule 6 is switched off: no threshold up to 0.99 keeps the false removals on dev at or below 1%.")
     else:
@@ -350,6 +385,14 @@ def build_report(train, kept, log, info, authors, outputs) -> str:
     d = info["dev_would_remove"]
     lines += ["", f"Applied to dev (never done for real), the rules would remove: broken text {d['broken_text']}, "
               f"judge {d['judge_cer']}, wrong language {d['wrong_language']} of {len(outputs['dev'])} clips.", ""]
+
+    lines += ["## Judge rule and numbers", "",
+              "Clips that reached rule 5, split by whether Whisper's output contains a digit.", "",
+              "| Whisper output | Clips judged | Removed by rule 5 | Rate |", "|---|---|---|---|"]
+    for label, group in (("with digits", True), ("without digits", False)):
+        judged, removed_n = info["judge_by_digits"][group]
+        lines.append(f"| {label} | {judged} | {removed_n} | {removed_n / judged:.1%} |" if judged else f"| {label} | 0 | 0 | - |")
+    lines += [""]
 
     lines += ["## Removed per rule", "", "| Rule | Reason | Clips | Hours |", "|---|---|---|---|"]
     counts = Counter(row["rule"] for row in log)
@@ -417,8 +460,11 @@ def run_judge(split: str, rows: list[dict], out_root: Path, model_id: str, batch
     lang_ids = torch.tensor([lang_to_id[t] for t in lang_tokens], device=device)
     es, eu = lang_tokens.index("<|es|>"), lang_tokens.index("<|eu|>")
 
+    import time
+
     path.parent.mkdir(parents=True, exist_ok=True)
     new_file = not path.is_file()
+    started = time.perf_counter()
     with open(path, "a", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=JUDGE_COLUMNS, lineterminator="\n")
         if new_file:
@@ -445,8 +491,13 @@ def run_judge(split: str, rows: list[dict], out_root: Path, model_id: str, batch
                 writer.writerow(row)
                 done[r["clip_id"]] = row
             f.flush()
-            print(f"\r{split}: {i + len(batch)}/{len(todo)}", end="", flush=True)
+            per_clip = (time.perf_counter() - started) / (i + len(batch))
+            print(f"\r{split}: {i + len(batch)}/{len(todo)}, {per_clip:.2f} s per clip", end="", flush=True)
     print()
+    if todo:
+        per_clip = (time.perf_counter() - started) / len(todo)
+        print(f"{per_clip:.2f} s per clip at batch size {batch_size}. At this speed: "
+              f"dev (1,397 clips) {1397 * per_clip / 60:.0f} min, train (10,515 clips) {10515 * per_clip / 3600:.1f} h")
 
     if all(r["clip_id"] in done for r in rows):  # finished: rewrite in manifest order
         write_csv(path, JUDGE_COLUMNS, [done[r["clip_id"]] for r in rows])
