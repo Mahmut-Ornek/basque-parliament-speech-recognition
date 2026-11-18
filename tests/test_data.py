@@ -248,9 +248,9 @@ def cleaning_repo(tmp_path) -> dict:
     the training sample; `expected` says which rule must remove each of them."""
     rng = random.Random(1)
     texts = _sentences(480, rng)
-    dev = [_row("12-077_20220211_01", 20.0 * i, t) for i, t in enumerate(texts[:120])]
-    test = [_row("12-078_20220218_01", 20.0 * i, t) for i, t in enumerate(texts[120:180])]
-    test[0] = _row("12-078_20220218_01", 0.0, "eskerrik asko", duration=1.0)
+    dev = [_row("12-077_20220211_01", 20.0 * i, t, speaker=str(100 + i % 4)) for i, t in enumerate(texts[:120])]
+    test = [_row("12-078_20220218_01", 20.0 * i, t, speaker=str(102 + i % 4)) for i, t in enumerate(texts[120:180])]
+    test[0] = _row("12-078_20220218_01", 0.0, "eskerrik asko", duration=1.0, speaker="0")
     train = [_row(f"11-{i // 50:03d}_2019{1 + i // 50:02d}15_01", 20.0 * (i % 50), t) for i, t in enumerate(texts[180:480])]
 
     judge = {r["clip_id"]: _judge_row(r) for r in train}
@@ -265,6 +265,9 @@ def cleaning_repo(tmp_path) -> dict:
     plant(_row(s, 0, "Eskerrik asko.", duration=1.0), "leakage_text")
     plant(_row(s, 20, test[5]["text"]), "leakage_text")
     plant(_row("12-078_20220218_01", 400.5, "gure talde hau ez da hori bat"), "leakage_audio_overlap")  # inside a test clip's time
+    plant(_row(s, 30, "lehendakari jauna eskerrik asko", speaker="101"), "held_out_speaker")   # speaks in dev
+    plant(_row(s, 35, "gure talde hau herritar osasun", speaker="105"), "held_out_speaker")     # speaks in test
+    plant(_row(s, 37, "proposamen eztabaida puntu gai", speaker="0"), "unknown_speaker")
     plant(_row(s, 40, "aurrekontu 2022 da gure gai hau"), "broken_text")
     plant(_row(s, 60, " ", duration=4.0), "broken_text")
     plant(_row(s, 80, " ".join(WORDS), duration=1.5), "speaking_rate")
@@ -376,6 +379,11 @@ def test_cleaned_sets_have_equal_hours_and_come_from_the_sample(cleaning_repo):
     sample = {r["clip_id"]: r for r in cleaning_repo["train"]}
     removed = {r["clip_id"] for r in cleaned(cleaning_repo, "removal_log.csv")}
     sets = {name: cleaned(cleaning_repo, f"train_{name}.csv") for name in ("ours", "authors", "rawmatched")}
+    raw = cleaned(cleaning_repo, "train_raw.csv")
+    leaked = {r["clip_id"] for r in cleaned(cleaning_repo, "removal_log.csv") if clean.RULE_NUMBER[r["rule"]] == 1}
+    assert {r["clip_id"] for r in raw} == {r["clip_id"] for r in cleaning_repo["train"]} - leaked
+    for rows in sets.values():
+        assert {r["clip_id"] for r in rows} <= {r["clip_id"] for r in raw}  # every condition is leakage-free
     for rows in sets.values():
         assert all(r == sample[r["clip_id"]] for r in rows)  # rows unchanged, transcripts never rewritten
     assert not {r["clip_id"] for r in sets["ours"]} & removed
@@ -384,10 +392,29 @@ def test_cleaned_sets_have_equal_hours_and_come_from_the_sample(cleaning_repo):
     assert max(totals) - min(totals) < 10  # within one clip
 
 
-def test_cleaned_train_shares_no_transcript_with_dev_or_test(cleaning_repo):
+def test_no_training_set_shares_a_speaker_or_sentence_with_dev_or_test(cleaning_repo):
     run_clean(cleaning_repo)
-    held_out = {clean.normalise(r["text"]) for r in cleaning_repo["dev"] + cleaning_repo["test"]}
-    assert not {clean.normalise(r["text"]) for r in cleaned(cleaning_repo, "train_ours.csv")} & held_out
+    held_out = cleaning_repo["dev"] + cleaning_repo["test"]
+    held_out_text = {clean.normalise(r["text"]) for r in held_out}
+    held_out_speakers = {r["speaker_id"] for r in held_out}
+    for name in ("train_raw", "train_ours", "train_authors", "train_rawmatched"):
+        rows = cleaned(cleaning_repo, f"{name}.csv")
+        assert not {clean.normalise(r["text"]) for r in rows} & held_out_text
+        assert not {r["speaker_id"] for r in rows} & (held_out_speakers | {"0"})
+
+
+def test_split_report(cleaning_repo):
+    import split_report
+
+    run_clean(cleaning_repo)
+    split_report.main(["--out-root", str(cleaning_repo["out"])])
+    report = (cleaning_repo["out"] / "data" / "split_report.md").read_text(encoding="utf-8")
+    raw_line = next(line for line in report.splitlines() if line.startswith("| train_sample (raw) |"))
+    assert raw_line.split(" | ")[1:3] != ["0", "0"]  # the raw sample does share speakers before rule 1
+    for name in ("train_raw", "train_ours", "train_authors", "train_rawmatched"):
+        line = next(line for line in report.splitlines() if line.startswith(f"| {name} |") and "/" in line)
+        assert line.split(" | ")[1:3] == ["0", "0"] and line.rstrip(" |").endswith("| 0 | 0")
+    assert "Speakers in both dev and test: 2 of 4 dev speakers and 4 test speakers" in report
 
 
 def test_clean_twice_gives_identical_files_and_leaves_manifests_alone(cleaning_repo):
@@ -417,11 +444,12 @@ needs_cleaned_data = pytest.mark.skipif(
 @needs_cleaned_data
 def test_real_cleaned_train_shares_nothing_with_dev_or_test():
     held_out = [r for name in ("dev.csv", "test.csv") for r in manifest(REPO, name)]
-    for name in ("train_ours.csv", "train_authors.csv", "train_rawmatched.csv"):
+    held_out_speakers = {r["speaker_id"] for r in held_out} | {"0"}
+    for name in ("train_raw.csv", "train_ours.csv", "train_authors.csv", "train_rawmatched.csv"):
         rows = clean.read_csv(CLEANED / name)
         assert not {r["clip_id"] for r in rows} & {r["clip_id"] for r in held_out}
-    ours = {clean.normalise(r["text"]) for r in clean.read_csv(CLEANED / "train_ours.csv")}
-    assert not ours & {clean.normalise(r["text"]) for r in held_out}
+        assert not {r["speaker_id"] for r in rows} & held_out_speakers, f"{name} shares a speaker with dev or test"
+        assert not {clean.normalise(r["text"]) for r in rows} & {clean.normalise(r["text"]) for r in held_out}
 
 
 @needs_cleaned_data

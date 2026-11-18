@@ -1,0 +1,11 @@
+{
+  "model": "openai/whisper-large-v3",
+  "revision": null,
+  "language": "eu",
+  "task": "transcribe",
+  "decoding": "greedy, max_new_tokens=128",
+  "precision": "float16",
+  "hardware": "NVIDIA GeForce RTX 3080 Laptop GPU",
+  "batch_size": 16,
+  "clips": 1397
+}

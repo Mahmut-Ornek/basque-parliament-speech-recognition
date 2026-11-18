@@ -15,7 +15,8 @@ The third step needs no GPU: it reads the saved judge outputs, so it gives ident
 every machine. Without the judge outputs it prints what rules 1-4 would remove and writes nothing.
 
 Rules, in this order (a clip is logged under the first rule that removes it):
-    1 leakage         the normalised transcript is also in dev or test, or the audio overlaps them
+    1 leakage         the normalised transcript is also in dev or test, the audio overlaps them, the
+                      speaker also speaks in dev or test, or the speaker is unknown (speaker_id 0)
     2 broken text     empty, or a character outside the Basque and Spanish alphabets
     3 timing          characters per second outside the range seen on dev, or a duration that
                       disagrees with the file name or with the decoded audio
@@ -23,7 +24,10 @@ Rules, in this order (a clip is logged under the first rule that removes it):
     5 judge           CER between Whisper's output and the transcript above a threshold
     6 wrong language  Whisper's language detection is confident the clip is Spanish
 
-Outputs in data/cleaned/: train_ours.csv, train_authors.csv, train_rawmatched.csv (equal hours),
+Rule 1 is leakage, not cleaning: it applies to every training condition. The raw sample without
+the rule-1 clips is train_raw.csv, the training set of ft-raw.
+
+Outputs in data/cleaned/: train_raw.csv, train_ours.csv, train_authors.csv, train_rawmatched.csv (equal hours),
 removal_log.csv (clip_id, rule, value, threshold) and cleaning_report.md.
 """
 from __future__ import annotations
@@ -55,7 +59,7 @@ MANIFEST_COLUMNS = list(make_sample.MANIFEST_COLUMNS)
 JUDGE_COLUMNS = ["clip_id", "hypothesis", "es_prob", "eu_prob", "top_language", "audio_seconds"]
 LOG_COLUMNS = ["clip_id", "rule", "value", "threshold"]
 RULE_NUMBER = {
-    "leakage_text": 1, "leakage_audio_overlap": 1,
+    "leakage_text": 1, "leakage_audio_overlap": 1, "held_out_speaker": 1, "unknown_speaker": 1,
     "broken_text": 2,
     "speaking_rate": 3, "duration_mismatch": 3,
     "repeated_text": 4, "repeated_audio_overlap": 4,
@@ -115,10 +119,15 @@ def hours(rows: list[dict]) -> float:
 # --- the rules: each returns {clip_id: (rule name, value, threshold)} ------------------------
 
 def find_leakage(rows: list[dict], held_out: dict[str, list[dict]]) -> dict:
-    texts, intervals = {}, defaultdict(list)
+    """Train clips that share a sentence, audio or a speaker with dev or test. The teacher's rule:
+    all clips of one speaker go to the same split. A clip without an identified speaker cannot be
+    checked, so it is removed too."""
+    texts, intervals, speakers = {}, defaultdict(list), {}
     for split, split_rows in held_out.items():
         for r in split_rows:
             texts.setdefault(normalise(r["text"]), split)
+            if r["speaker_id"] != make_sample.UNKNOWN_SPEAKER:
+                speakers.setdefault(r["speaker_id"], split)
             t = clip_times(r["clip_id"])
             if t:
                 intervals[t[0]].append((t[1], t[2]))
@@ -133,6 +142,11 @@ def find_leakage(rows: list[dict], held_out: dict[str, list[dict]]) -> dict:
             overlap = max((min(end, t[2]) - max(start, t[1]) for start, end in intervals.get(t[0], [])), default=0)
             if overlap > 0:
                 removed[r["clip_id"]] = ("leakage_audio_overlap", f"{overlap:.2f}", "0")
+                continue
+        if r["speaker_id"] == make_sample.UNKNOWN_SPEAKER:
+            removed[r["clip_id"]] = ("unknown_speaker", r["speaker_id"], "")
+        elif r["speaker_id"] in speakers:
+            removed[r["clip_id"]] = ("held_out_speaker", r["speaker_id"], speakers[r["speaker_id"]])
     return removed
 
 
@@ -349,10 +363,15 @@ def authors_clean_ids(tsv_path: Path) -> set[str]:
     return ids
 
 
-def build_report(train, kept, log, info, authors, outputs) -> str:
+def build_report(train, train_raw, kept, log, info, authors, outputs) -> str:
     duration = {r["clip_id"]: float(r["duration"]) for r in train}
     lines = ["# Cleaning report", "", "Written by `src/clean.py`. Do not edit by hand.", ""]
-    lines += [f"Raw sample: {len(train)} clips, {hours(train):.2f} h. Kept by our rules: {len(kept)} clips, {hours(kept):.2f} h.", ""]
+    lines += [
+        f"Raw sample: {len(train)} clips, {hours(train):.2f} h.",
+        f"After rule 1 (leakage, applied to every condition): {len(train_raw)} clips, {hours(train_raw):.2f} h "
+        "(`train_raw.csv`, the training set of `ft-raw`). No training clip shares a speaker, a sentence or audio with dev or test.",
+        f"Kept by all our rules: {len(kept)} clips, {hours(kept):.2f} h.", "",
+    ]
 
     lines += ["## Thresholds (all chosen on dev)", ""]
     t = info["timing"]
@@ -404,10 +423,11 @@ def build_report(train, kept, log, info, authors, outputs) -> str:
     lines += [f"| | **total** | {len(log)} | {sum(secs.values()) / 3600:.2f} |", ""]
 
     kept_ids = {r["clip_id"] for r in kept}
-    cells = Counter((r["clip_id"] in kept_ids, r["clip_id"] in authors) for r in train)
+    cells = Counter((r["clip_id"] in kept_ids, r["clip_id"] in authors) for r in train_raw)
     lines += [
         "## Our filter against the authors' filter", "",
-        "The authors' `train_clean` comes from an automatic score, not a human check: a reference, not the truth.", "",
+        "Clips of `train_raw.csv` (rules 2-6 against the authors' `train_clean`). The authors' filter comes from an "
+        "automatic score, not a human check: a reference, not the truth.", "",
         "| | Authors keep | Authors remove |", "|---|---|---|",
         f"| **We keep** | {cells[(True, True)]} | {cells[(True, False)]} |",
         f"| **We remove** | {cells[(False, True)]} | {cells[(False, False)]} |", "",
@@ -415,6 +435,8 @@ def build_report(train, kept, log, info, authors, outputs) -> str:
     ]
     for name in ("train_ours", "train_authors", "train_rawmatched"):
         lines.append(f"| `{name}.csv` | {len(outputs[name])} | {hours(outputs[name]):.3f} |")
+    lines += ["", f"`train_raw.csv` ({len(train_raw)} clips, {hours(train_raw):.3f} h) is not size-matched: "
+              "`ft-raw` tests whether more but noisier hours win."]
     return "\n".join(lines) + "\n"
 
 
@@ -546,21 +568,24 @@ def main(argv: list[str] | None = None) -> None:
 
     kept, log, info = clean(train, dev, test, judge_train, judge_dev)
     authors_ids = authors_clean_ids(make_sample.fetch("metadata/train_clean.tsv", args.local_repo, args.cache_dir))
-    authors = [r for r in train if r["clip_id"] in authors_ids]
+    leaked = {row["clip_id"] for row in log if RULE_NUMBER[row["rule"]] == 1}
+    train_raw = [r for r in train if r["clip_id"] not in leaked]
+    authors = [r for r in train_raw if r["clip_id"] in authors_ids]
 
     # Size matching: the three training sets get the hours of the smaller of ours and the authors'.
     target = min(hours(kept), hours(authors))
     outputs = {
+        "train_raw": train_raw,
         "train_ours": kept if hours(kept) <= target else random_subset(kept, target),
         "train_authors": authors if hours(authors) <= target else random_subset(authors, target),
-        "train_rawmatched": random_subset(train, target),
+        "train_rawmatched": random_subset(train_raw, target),
         "dev": dev,
     }
     cleaned = out_root / "data" / "cleaned"
-    for name in ("train_ours", "train_authors", "train_rawmatched"):
+    for name in ("train_raw", "train_ours", "train_authors", "train_rawmatched"):
         write_csv(cleaned / f"{name}.csv", MANIFEST_COLUMNS, outputs[name])
     write_csv(cleaned / "removal_log.csv", LOG_COLUMNS, log)
-    report = build_report(train, kept, log, info, {r["clip_id"] for r in authors}, outputs)
+    report = build_report(train, train_raw, kept, log, info, {r["clip_id"] for r in authors}, outputs)
     (cleaned / "cleaning_report.md").write_text(report, encoding="utf-8", newline="\n")
     print(report)
 
