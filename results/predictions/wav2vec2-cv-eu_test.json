@@ -1,0 +1,29 @@
+{
+  "name": "wav2vec2-cv-eu",
+  "model": "stefan-it/wav2vec2-large-xlsr-53-basque",
+  "revision": "ac4e27d2d376a5ed919b381ec99d7a86b37c0a6b",
+  "family": "ctc",
+  "training": "none (pretrained model as published)",
+  "split": "test",
+  "manifest": "data/raw/manifests/test.csv",
+  "clips": 1521,
+  "audio_hours": 2.809,
+  "decoding": "greedy CTC (argmax per frame), no language model",
+  "max_new_tokens": null,
+  "precision": "float16",
+  "batch_size": 16,
+  "hardware": "NVIDIA GeForce RTX 4070 Laptop GPU",
+  "versions": {
+    "python": "3.12.10",
+    "torch": "2.9.1+cu126",
+    "transformers": "5.19.0"
+  },
+  "model_load_seconds": 49.7,
+  "wall_seconds": 50.7,
+  "audio_decoding_seconds": 11.9,
+  "model_seconds": 38.8,
+  "seconds_per_clip": 0.0334,
+  "real_time_factor": 0.005,
+  "clips_hitting_token_limit": 0,
+  "finished_utc": "2026-11-18T12:35:12Z"
+}

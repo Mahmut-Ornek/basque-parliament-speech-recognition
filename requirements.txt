@@ -3,6 +3,6 @@
 huggingface_hub==1.33.0
 pytest==9.2.0
 jiwer==4.0.0
-torch==2.9.1+cu130
+torch==2.9.1
 transformers==5.19.0
 librosa==1.0.1

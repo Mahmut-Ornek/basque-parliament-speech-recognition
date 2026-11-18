@@ -1,0 +1,29 @@
+{
+  "name": "wav2vec2-bp1",
+  "model": "gttsehu/wav2vec2-xls-r-300m-bp1-es_eu",
+  "revision": "199a7ba4538288b87d2ce8903a031057abab0be3",
+  "family": "ctc",
+  "training": "none (pretrained model as published)",
+  "split": "dev",
+  "manifest": "data/raw/manifests/dev.csv",
+  "clips": 1397,
+  "audio_hours": 2.582,
+  "decoding": "greedy CTC (argmax per frame), no language model",
+  "max_new_tokens": null,
+  "precision": "float16",
+  "batch_size": 16,
+  "hardware": "NVIDIA GeForce RTX 4070 Laptop GPU",
+  "versions": {
+    "python": "3.12.10",
+    "torch": "2.9.1+cu126",
+    "transformers": "5.19.0"
+  },
+  "model_load_seconds": 105.1,
+  "wall_seconds": 62.0,
+  "audio_decoding_seconds": 19.1,
+  "model_seconds": 42.9,
+  "seconds_per_clip": 0.0444,
+  "real_time_factor": 0.0067,
+  "clips_hitting_token_limit": 0,
+  "finished_utc": "2026-11-18T16:33:58Z"
+}

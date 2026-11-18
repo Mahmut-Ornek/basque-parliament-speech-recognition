@@ -1,0 +1,29 @@
+{
+  "name": "whisper-small-zeroshot",
+  "model": "openai/whisper-small",
+  "revision": "973afd24965f72e36ca33b3055d56a652f456b4d",
+  "family": "whisper",
+  "training": "none (pretrained model as published)",
+  "split": "test",
+  "manifest": "data/raw/manifests/test.csv",
+  "clips": 1521,
+  "audio_hours": 2.809,
+  "decoding": "greedy, language=eu (forced), task=transcribe, max_new_tokens=128",
+  "max_new_tokens": 128,
+  "precision": "float16",
+  "batch_size": 16,
+  "hardware": "NVIDIA GeForce RTX 4070 Laptop GPU",
+  "versions": {
+    "python": "3.12.10",
+    "torch": "2.9.1+cu126",
+    "transformers": "5.19.0"
+  },
+  "model_load_seconds": 12.0,
+  "wall_seconds": 316.8,
+  "audio_decoding_seconds": 12.0,
+  "model_seconds": 304.8,
+  "seconds_per_clip": 0.2083,
+  "real_time_factor": 0.0313,
+  "clips_hitting_token_limit": 128,
+  "finished_utc": "2026-11-18T12:33:16Z"
+}
