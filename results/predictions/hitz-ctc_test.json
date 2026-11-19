@@ -1,0 +1,18 @@
+{
+  "run_name": "hitz-ctc",
+  "model_id": "HiTZ/stt_eu_conformer_ctc_large",
+  "revision": "c1d54f5af962c88fd022c0d9cacb50b410d0fb5d",
+  "split": "test",
+  "num_clips": 1521,
+  "language_hint": "eu",
+  "decoding": "greedy",
+  "hardware": "Tesla T4",
+  "precision": "fp32",
+  "batch_size": 1,
+  "total_audio_seconds": 10110.76,
+  "total_compute_seconds": 87.607,
+  "rtfx": 115.411,
+  "rtf": 0.00866,
+  "median_clip_seconds": 0.05385,
+  "p95_clip_seconds": 0.07915
+}

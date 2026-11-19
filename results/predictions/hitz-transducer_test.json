@@ -1,0 +1,18 @@
+{
+  "run_name": "hitz-transducer",
+  "model_id": "HiTZ/stt_eu_conformer_transducer_large",
+  "revision": "a6ec26c73009e16f9e45c3a855cae067fa757fb0",
+  "split": "test",
+  "num_clips": 1521,
+  "language_hint": "eu",
+  "decoding": "greedy",
+  "hardware": "Tesla T4",
+  "precision": "fp32",
+  "batch_size": 1,
+  "total_audio_seconds": 10110.76,
+  "total_compute_seconds": 109.802,
+  "rtfx": 92.082,
+  "rtf": 0.01086,
+  "median_clip_seconds": 0.07063,
+  "p95_clip_seconds": 0.09526
+}

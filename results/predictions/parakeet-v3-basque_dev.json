@@ -1,0 +1,18 @@
+{
+  "run_name": "parakeet-v3-basque",
+  "model_id": "itzune/parakeet-tdt-0.6b-v3-basque",
+  "revision": "4977e1696b8b2d45a09bb1bbab41dfc4d7a375a7",
+  "split": "dev",
+  "num_clips": 1397,
+  "language_hint": "eu",
+  "decoding": "greedy",
+  "hardware": "Tesla T4",
+  "precision": "fp32",
+  "batch_size": 1,
+  "total_audio_seconds": 9293.98,
+  "total_compute_seconds": 137.386,
+  "rtfx": 67.649,
+  "rtf": 0.01478,
+  "median_clip_seconds": 0.09532,
+  "p95_clip_seconds": 0.12791
+}
