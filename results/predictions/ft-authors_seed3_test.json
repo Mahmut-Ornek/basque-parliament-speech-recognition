@@ -1,0 +1,29 @@
+{
+  "name": "ft-authors_seed3",
+  "model": "models/ft-authors_seed3/best",
+  "revision": null,
+  "family": "whisper",
+  "training": "fine-tuned checkpoint",
+  "split": "test",
+  "manifest": "data/raw/manifests/test.csv",
+  "clips": 1521,
+  "audio_hours": 2.809,
+  "decoding": "greedy, language=eu (forced), task=transcribe, max_new_tokens=128",
+  "max_new_tokens": 128,
+  "precision": "float16",
+  "batch_size": 16,
+  "hardware": "NVIDIA GeForce RTX 3080 Laptop GPU",
+  "versions": {
+    "python": "3.12.3",
+    "torch": "2.9.1+cu130",
+    "transformers": "5.19.0"
+  },
+  "model_load_seconds": 16.0,
+  "wall_seconds": 298.7,
+  "audio_decoding_seconds": 3.3,
+  "model_seconds": 295.4,
+  "seconds_per_clip": 0.1964,
+  "real_time_factor": 0.0295,
+  "clips_hitting_token_limit": 114,
+  "finished_utc": "2026-11-19T09:48:38Z"
+}
