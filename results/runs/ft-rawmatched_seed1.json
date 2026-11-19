@@ -1,0 +1,388 @@
+{
+  "name": "ft-rawmatched_seed1",
+  "condition": "ft-rawmatched",
+  "base_model": "openai/whisper-small",
+  "base_revision": "973afd24965f72e36ca33b3055d56a652f456b4d",
+  "train_manifest": "data/cleaned/train_rawmatched.csv",
+  "train_clips": 4311,
+  "train_hours": 8.228,
+  "dev_clips": 1397,
+  "seed": 1,
+  "settings": {
+    "steps": 2500,
+    "eval_every": 500,
+    "batch_size": 8,
+    "grad_accum": 2,
+    "clips_per_step": 16,
+    "epochs": 9.28,
+    "optimizer": "AdamW (torch defaults: betas 0.9/0.999, eps 1e-8, weight decay 0.01)",
+    "lr": 1e-05,
+    "schedule": "linear warm-up 250 steps, linear decay to 0",
+    "max_grad_norm": 1.0,
+    "precision": "fp16 autocast, fp32 weights",
+    "gradient_checkpointing": true,
+    "language": "eu",
+    "task": "transcribe",
+    "dev_decoding": "greedy, language=eu (forced), max_new_tokens=128",
+    "max_new_tokens": 128,
+    "dev_wer": "jiwer WER after clean.normalise (lowercase, no punctuation); used only to pick the checkpoint"
+  },
+  "hardware": "NVIDIA GeForce RTX 4070 Laptop GPU",
+  "versions": {
+    "python": "3.12.10",
+    "torch": "2.9.1+cu126",
+    "transformers": "5.19.0"
+  },
+  "started_utc": "2026-11-19T12:20:53Z",
+  "train_loss": [
+    {
+      "step": 50,
+      "loss": 1.4841,
+      "lr": 2.0000000000000003e-06,
+      "seconds_per_step": 2.056
+    },
+    {
+      "step": 100,
+      "loss": 0.9363,
+      "lr": 4.000000000000001e-06,
+      "seconds_per_step": 1.635
+    },
+    {
+      "step": 150,
+      "loss": 0.7298,
+      "lr": 6e-06,
+      "seconds_per_step": 1.647
+    },
+    {
+      "step": 200,
+      "loss": 0.6065,
+      "lr": 8.000000000000001e-06,
+      "seconds_per_step": 1.664
+    },
+    {
+      "step": 250,
+      "loss": 0.492,
+      "lr": 1e-05,
+      "seconds_per_step": 1.651
+    },
+    {
+      "step": 300,
+      "loss": 0.3788,
+      "lr": 9.777777777777779e-06,
+      "seconds_per_step": 1.655
+    },
+    {
+      "step": 350,
+      "loss": 0.3262,
+      "lr": 9.555555555555556e-06,
+      "seconds_per_step": 1.655
+    },
+    {
+      "step": 400,
+      "loss": 0.3005,
+      "lr": 9.333333333333334e-06,
+      "seconds_per_step": 1.655
+    },
+    {
+      "step": 450,
+      "loss": 0.2895,
+      "lr": 9.111111111111112e-06,
+      "seconds_per_step": 1.655
+    },
+    {
+      "step": 500,
+      "loss": 0.2677,
+      "lr": 8.888888888888888e-06,
+      "seconds_per_step": 1.653
+    },
+    {
+      "step": 550,
+      "loss": 0.2273,
+      "lr": 8.666666666666668e-06,
+      "seconds_per_step": 1.706
+    },
+    {
+      "step": 600,
+      "loss": 0.1312,
+      "lr": 8.444444444444446e-06,
+      "seconds_per_step": 1.788
+    },
+    {
+      "step": 650,
+      "loss": 0.1316,
+      "lr": 8.222222222222222e-06,
+      "seconds_per_step": 1.769
+    },
+    {
+      "step": 700,
+      "loss": 0.1208,
+      "lr": 8.000000000000001e-06,
+      "seconds_per_step": 1.764
+    },
+    {
+      "step": 750,
+      "loss": 0.1315,
+      "lr": 7.77777777777778e-06,
+      "seconds_per_step": 1.814
+    },
+    {
+      "step": 800,
+      "loss": 0.1327,
+      "lr": 7.555555555555556e-06,
+      "seconds_per_step": 1.862
+    },
+    {
+      "step": 850,
+      "loss": 0.069,
+      "lr": 7.333333333333333e-06,
+      "seconds_per_step": 1.895
+    },
+    {
+      "step": 900,
+      "loss": 0.0578,
+      "lr": 7.111111111111112e-06,
+      "seconds_per_step": 1.911
+    },
+    {
+      "step": 950,
+      "loss": 0.0549,
+      "lr": 6.88888888888889e-06,
+      "seconds_per_step": 1.889
+    },
+    {
+      "step": 1000,
+      "loss": 0.0553,
+      "lr": 6.666666666666667e-06,
+      "seconds_per_step": 1.794
+    },
+    {
+      "step": 1050,
+      "loss": 0.0504,
+      "lr": 6.444444444444445e-06,
+      "seconds_per_step": 1.765
+    },
+    {
+      "step": 1100,
+      "loss": 0.0398,
+      "lr": 6.222222222222223e-06,
+      "seconds_per_step": 1.736
+    },
+    {
+      "step": 1150,
+      "loss": 0.0229,
+      "lr": 6e-06,
+      "seconds_per_step": 1.763
+    },
+    {
+      "step": 1200,
+      "loss": 0.0221,
+      "lr": 5.777777777777778e-06,
+      "seconds_per_step": 1.752
+    },
+    {
+      "step": 1250,
+      "loss": 0.0235,
+      "lr": 5.555555555555557e-06,
+      "seconds_per_step": 1.74
+    },
+    {
+      "step": 1300,
+      "loss": 0.0239,
+      "lr": 5.333333333333334e-06,
+      "seconds_per_step": 1.796
+    },
+    {
+      "step": 1350,
+      "loss": 0.0229,
+      "lr": 5.1111111111111115e-06,
+      "seconds_per_step": 1.795
+    },
+    {
+      "step": 1400,
+      "loss": 0.0099,
+      "lr": 4.888888888888889e-06,
+      "seconds_per_step": 1.747
+    },
+    {
+      "step": 1450,
+      "loss": 0.0122,
+      "lr": 4.666666666666667e-06,
+      "seconds_per_step": 1.733
+    },
+    {
+      "step": 1500,
+      "loss": 0.0103,
+      "lr": 4.444444444444444e-06,
+      "seconds_per_step": 1.76
+    },
+    {
+      "step": 1550,
+      "loss": 0.0083,
+      "lr": 4.222222222222223e-06,
+      "seconds_per_step": 1.737
+    },
+    {
+      "step": 1600,
+      "loss": 0.0115,
+      "lr": 4.000000000000001e-06,
+      "seconds_per_step": 1.747
+    },
+    {
+      "step": 1650,
+      "loss": 0.007,
+      "lr": 3.777777777777778e-06,
+      "seconds_per_step": 1.729
+    },
+    {
+      "step": 1700,
+      "loss": 0.0052,
+      "lr": 3.555555555555556e-06,
+      "seconds_per_step": 1.763
+    },
+    {
+      "step": 1750,
+      "loss": 0.0044,
+      "lr": 3.3333333333333333e-06,
+      "seconds_per_step": 1.781
+    },
+    {
+      "step": 1800,
+      "loss": 0.0045,
+      "lr": 3.1111111111111116e-06,
+      "seconds_per_step": 1.836
+    },
+    {
+      "step": 1850,
+      "loss": 0.0052,
+      "lr": 2.888888888888889e-06,
+      "seconds_per_step": 1.754
+    },
+    {
+      "step": 1900,
+      "loss": 0.0038,
+      "lr": 2.666666666666667e-06,
+      "seconds_per_step": 1.757
+    },
+    {
+      "step": 1950,
+      "loss": 0.003,
+      "lr": 2.4444444444444447e-06,
+      "seconds_per_step": 1.761
+    },
+    {
+      "step": 2000,
+      "loss": 0.0029,
+      "lr": 2.222222222222222e-06,
+      "seconds_per_step": 1.745
+    },
+    {
+      "step": 2050,
+      "loss": 0.0034,
+      "lr": 2.0000000000000003e-06,
+      "seconds_per_step": 1.742
+    },
+    {
+      "step": 2100,
+      "loss": 0.003,
+      "lr": 1.777777777777778e-06,
+      "seconds_per_step": 1.791
+    },
+    {
+      "step": 2150,
+      "loss": 0.0028,
+      "lr": 1.5555555555555558e-06,
+      "seconds_per_step": 1.758
+    },
+    {
+      "step": 2200,
+      "loss": 0.0024,
+      "lr": 1.3333333333333334e-06,
+      "seconds_per_step": 1.789
+    },
+    {
+      "step": 2250,
+      "loss": 0.0026,
+      "lr": 1.111111111111111e-06,
+      "seconds_per_step": 1.77
+    },
+    {
+      "step": 2300,
+      "loss": 0.0026,
+      "lr": 8.88888888888889e-07,
+      "seconds_per_step": 1.771
+    },
+    {
+      "step": 2350,
+      "loss": 0.0024,
+      "lr": 6.666666666666667e-07,
+      "seconds_per_step": 1.778
+    },
+    {
+      "step": 2400,
+      "loss": 0.0024,
+      "lr": 4.444444444444445e-07,
+      "seconds_per_step": 1.77
+    },
+    {
+      "step": 2450,
+      "loss": 0.0023,
+      "lr": 2.2222222222222224e-07,
+      "seconds_per_step": 1.794
+    },
+    {
+      "step": 2500,
+      "loss": 0.0022,
+      "lr": 0.0,
+      "seconds_per_step": 1.776
+    }
+  ],
+  "evaluations": [
+    {
+      "step": 500,
+      "epoch": 1.86,
+      "dev_wer": 0.2695,
+      "eval_seconds": 124.6,
+      "clips_hitting_token_limit": 100,
+      "elapsed_minutes": 16.2
+    },
+    {
+      "step": 1000,
+      "epoch": 3.71,
+      "dev_wer": 0.2316,
+      "eval_seconds": 191.7,
+      "clips_hitting_token_limit": 97,
+      "elapsed_minutes": 34.6
+    },
+    {
+      "step": 1500,
+      "epoch": 5.57,
+      "dev_wer": 0.2198,
+      "eval_seconds": 176.6,
+      "clips_hitting_token_limit": 96,
+      "elapsed_minutes": 52.3
+    },
+    {
+      "step": 2000,
+      "epoch": 7.42,
+      "dev_wer": 0.2175,
+      "eval_seconds": 182.0,
+      "clips_hitting_token_limit": 97,
+      "elapsed_minutes": 70.0
+    },
+    {
+      "step": 2500,
+      "epoch": 9.28,
+      "dev_wer": 0.2156,
+      "eval_seconds": 179.7,
+      "clips_hitting_token_limit": 97,
+      "elapsed_minutes": 87.8
+    }
+  ],
+  "best_step": 2500,
+  "best_dev_wer": 0.2156,
+  "checkpoint": "models/ft-rawmatched_seed1/best",
+  "status": "finished",
+  "finished_utc": "2026-11-19T13:48:42Z",
+  "total_minutes": 87.8,
+  "peak_gpu_memory_gb": 5.0
+}
