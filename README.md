@@ -15,7 +15,7 @@ numbers in this README are written by `src/score_all.py`; nobody types them in.
 
 - [Data](#data) · [Splits: no speaker leak](#splits-no-speaker-leak) · [Cleaning](#cleaning)
 - [Baselines](#baselines) · [Baselines not run](#baselines-not-run)
-- [Metrics](#metrics) · [Results](#results) · [Speed](#speed)
+- [Metrics](#metrics) · [Results](#results) · [Speed](#speed) · [Error analysis](#error-analysis)
 - [How to reproduce](#how-to-reproduce) · [Seeds and hardware](#seeds-and-hardware)
 - [Repository layout](#repository-layout) · [Team](#team) · [Licence](#licence)
 
@@ -117,7 +117,7 @@ another language setting.
 | [nvidia/canary-1b-v2](https://huggingface.co/nvidia/canary-1b-v2) | 25 European languages, not Basque |
 | [nvidia/parakeet-tdt-0.6b-v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) | 25 European languages, not Basque; its Basque fine-tune `parakeet-v3-basque` is run instead |
 | [Qwen/Qwen3-ASR-1.7B](https://huggingface.co/Qwen/Qwen3-ASR-1.7B) | 30 languages and 22 Chinese dialects; Basque is not among them |
-| MFCC + GMM-HMM | Optional per the teacher. There is no pretrained Basque model, and training one did not fit the week |
+| MFCC + GMM-HMM | Not run. No pretrained Basque GMM-HMM exists, so it would have to be trained by us (for example with Kaldi), and that did not fit the week |
 
 ## Metrics
 
@@ -199,14 +199,18 @@ Difference = A − B; negative means A makes fewer errors. Paired bootstrap on t
 Dot: test WER. Line: 95% confidence interval. Right panel: our four training sets, zoomed in.
 Drawn by `python src/plot_results.py` from `results/results_table.csv`.
 
-Error types (substitutions, deletions, insertions, number errors, repetition loops) per model:
-[`report/error_analysis.md`](report/error_analysis.md).
+### Error analysis
+
+Error types per model (wrong word endings, number errors, other substitutions, deletions,
+insertions, repetition loops) are in [`report/error_analysis.md`](report/error_analysis.md) and
+`results/error_types.csv`, written by `src/error_types.py`.
 
 ## Speed
 
-RTFx = audio seconds / compute seconds (higher is faster), measured the same way for every model
-by `src/timing.py`: from audio in memory to text returned, model loading excluded, 5 warm-up
-clips, batch size 1, Colab T4, 100 `dev` clips per model. Table: `results/runtime_table.md`.
+Not measured. The plan was RTFx (audio seconds / compute seconds, higher is faster) for every
+model, timed the same way: audio in memory to text returned, model loading excluded, 5 warm-up
+clips, batch size 1, Colab T4, the same 100 `dev` clips. The timing pass was not completed, so we
+report no speed numbers rather than numbers measured in different ways on different machines.
 
 ## How to reproduce
 
@@ -259,7 +263,6 @@ normalises.
   `results/runs/` names its GPU).
 - **Baselines:** NeMo models on a Colab T4; Hugging Face models on the RTX 4070 Laptop GPU or a
   Colab T4 (each prediction's JSON names its hardware).
-- **Timing:** Colab T4 for every model.
 
 ## Repository layout
 
@@ -277,14 +280,16 @@ normalises.
 | `src/finetune_whisper.py` | Fine-tunes Whisper-small on one training set with one seed |
 | `src/transcribe.py` | Transcribes a split with any Whisper or CTC model from Hugging Face, or a fine-tuned checkpoint |
 | `src/run_nemo.py` | Transcribes a split with the three NeMo models |
-| `src/timing.py` | Measures speed the same way for every model |
 | `src/normalize.py` | The scoring normalisation |
 | `src/score_all.py` | WER, CER, confidence intervals, paired comparisons; writes `results/` and this README's Results |
 | `src/plot_results.py` | Draws the confidence-interval figure from the results table |
+| `src/error_types.py` | Splits each model's errors into types (word endings, numbers, other substitutions, deletions, insertions, repetition loops); writes `results/error_types.csv` and `report/error_analysis.md` |
 | `tests/` | `pytest` tests for the data, the cleaning, the normalisation and the scoring |
 | `results/predictions/` | One CSV (raw model output) and one JSON (settings, model revision, hardware, timing) per run and split |
 | `results/runs/` | Fine-tuning logs (JSON): settings, dev WER at every evaluation, best step, hardware |
-| `results/results_table.*`, `results/paired_comparisons.csv`, `results/per_run_test.csv` | Scores, written by `src/score_all.py` |
+| `results/results_table.*`, `results/paired_comparisons.csv`, `results/per_run_test.csv` | Test scores, written by `src/score_all.py` |
+| `results/results_table_dev.*`, `results/paired_comparisons_dev.csv`, `results/per_run_dev.csv` | The same on `dev`, for quick checks (`src/score_all.py --split dev`) |
+| `results/error_types.csv` | Error types per model and split, written by `src/error_types.py` |
 | `results/figures/` | PNG figures; `wer_ci.png` is drawn by `src/plot_results.py` |
 | `report/scoring_policy.md` | The frozen scoring rules |
 | `report/metric_justification.md` | Why WER, CER and RTFx, and which is the main metric |
@@ -299,8 +304,6 @@ Root files:
 | `README.md` | This file |
 | `requirements.txt` | Pinned packages (`==`) for the data, cleaning, Whisper and wav2vec 2.0 runs, and scoring |
 | `requirements-nemo.txt` | Pinned packages for the three NeMo models, kept apart because NeMo needs library versions that clash with the main file |
-| `LICENSE` | Licence of our code |
-| `CITATION.md` | How to cite this project, the corpus and the models |
 | `.gitignore` | Keeps model weights (`models/`), caches, secrets (`.env`) and notebook checkpoints out of the repository |
 
 Model weights are not committed: the fine-tuned checkpoints stay in `models/`, which is ignored.
@@ -314,11 +317,11 @@ The run code, training logs and predictions are committed.
 | Shahem Hasunoglu | Scoring policy, normalisation, scoring and statistics, tests, metric justification, README, presentation |
 | Ibrahim Aliyev | Transcription and fine-tuning scripts, Whisper-small zero-shot and wav2vec 2.0 baselines, fine-tuning runs |
 | Tuğra Geler | NeMo baselines, baseline training-data audit, error analysis |
-| Seleni | Whisper large-v3 and mHuBERT baselines, timing helper, figures, licence and citation files |
+| Seleni | Assigned: Whisper large-v3 and mHuBERT baselines, timing, licence and citation files |
 
 Each member's own account of their work is in [`contributions/`](contributions/).
 
 ## Licence
 
-Our code: see [`LICENSE`](LICENSE). The corpus is CC0 1.0. Each pretrained model keeps the
+The corpus is CC0 1.0. Each pretrained model keeps the
 licence on its model card.
