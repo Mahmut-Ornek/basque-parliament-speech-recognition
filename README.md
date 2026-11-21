@@ -194,6 +194,11 @@ Difference = A − B; negative means A makes fewer errors. Paired bootstrap on t
 | `ft-authors` | `whisper-small-zeroshot` | How much does fine-tuning help? (A chosen by mean dev WER) | -0.7960 | [-0.8491, -0.7470] | < 0.001 | -0.3496 | [-0.3822, -0.3202] | < 0.001 |
 <!-- results:end -->
 
+![Test WER of every scored model with its 95% confidence interval](results/figures/wer_ci.png)
+
+Dot: test WER. Line: 95% confidence interval. Right panel: our four training sets, zoomed in.
+Drawn by `python src/plot_results.py` from `results/results_table.csv`.
+
 Error types (substitutions, deletions, insertions, number errors, repetition loops) per model:
 [`report/error_analysis.md`](report/error_analysis.md).
 
@@ -236,6 +241,7 @@ python src/run_nemo.py --run hitz-ctc --split test --manifest data/raw/manifests
 
 # 5. Scores
 python src/score_all.py                    # results tables, paired comparisons, this README's Results
+python src/plot_results.py                 # results/figures/wer_ci.png
 python src/score_all.py --split dev        # the same on dev, for quick checks
 ```
 
@@ -274,15 +280,17 @@ normalises.
 | `src/timing.py` | Measures speed the same way for every model |
 | `src/normalize.py` | The scoring normalisation |
 | `src/score_all.py` | WER, CER, confidence intervals, paired comparisons; writes `results/` and this README's Results |
+| `src/plot_results.py` | Draws the confidence-interval figure from the results table |
 | `tests/` | `pytest` tests for the data, the cleaning, the normalisation and the scoring |
 | `results/predictions/` | One CSV (raw model output) and one JSON (settings, model revision, hardware, timing) per run and split |
 | `results/runs/` | Fine-tuning logs (JSON): settings, dev WER at every evaluation, best step, hardware |
 | `results/results_table.*`, `results/paired_comparisons.csv`, `results/per_run_test.csv` | Scores, written by `src/score_all.py` |
-| `results/figures/` | PNG figures |
+| `results/figures/` | PNG figures; `wer_ci.png` is drawn by `src/plot_results.py` |
 | `report/scoring_policy.md` | The frozen scoring rules |
 | `report/metric_justification.md` | Why WER, CER and RTFx, and which is the main metric |
 | `report/baseline_audit.md` | What each baseline was trained on, and whether it heard our test speakers |
 | `report/error_analysis.md` | Error types per model |
+| `report/presentation.pptx` | The presentation slides; every number on them comes from `results/` |
 
 Root files:
 
