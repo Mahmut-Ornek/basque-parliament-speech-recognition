@@ -1,0 +1,13 @@
+part,run,trained_on,seeds,heard_test_speakers,wer,wer_ci_low,wer_ci_high,wer_sd,cer,cer_ci_low,cer_ci_high,cer_sd,per_seed_wer,status
+Baselines,whisper-large-v3,openai/whisper-large-v3,,Unknown,,,,,,,,,,no prediction file
+Baselines,whisper-small-zeroshot,openai/whisper-small,,Unknown,1.011739,0.963565,1.065606,,0.401583,0.371780,0.434526,,,scored
+Baselines,hitz-ctc,HiTZ/stt_eu_conformer_ctc_large,,Yes,0.047481,0.043597,0.051302,,0.015121,0.013679,0.016560,,,scored
+Baselines,hitz-transducer,HiTZ/stt_eu_conformer_transducer_large,,Yes,0.042796,0.039239,0.046407,,0.015150,0.013674,0.016728,,,scored
+Baselines,parakeet-v3-basque,itzune/parakeet-tdt-0.6b-v3-basque,,Yes,0.046850,0.043188,0.050401,,0.015721,0.014185,0.017313,,,scored
+Baselines,wav2vec2-bp1,gttsehu/wav2vec2-xls-r-300m-bp1-es_eu,,Yes,,,,,,,,,,no prediction file
+Baselines,wav2vec2-cv-eu,stefan-it/wav2vec2-large-xlsr-53-basque,,No,0.333842,0.323163,0.344287,,0.069895,0.067047,0.073006,,,scored
+Baselines,mhubert-basque,Ansu/mHubert-basque-ASR,,Yes,,,,,,,,,,no prediction file
+Our contribution,ft-raw,"train_raw.csv: raw sample, leakage rule only (9.24 h)",3,No,0.215824,0.207043,0.225733,,0.056458,0.052592,0.061406,,0.2158,scored
+Our contribution,ft-rawmatched,"train_rawmatched.csv: random part of the raw sample, same hours as the cleaned sets",3,No,0.222614,0.213727,0.231919,,0.055396,0.052712,0.058200,,0.2226,scored
+Our contribution,ft-authors,train_authors.csv: the corpus authors' clean split,3,No,0.215771,0.206836,0.224783,,0.052027,0.049478,0.054708,,0.2158,scored
+Our contribution,ft-ours,train_ours.csv: our cleaning script,3,No,0.218613,0.209693,0.228087,,0.054174,0.051554,0.056926,,0.2186,scored

@@ -150,3 +150,32 @@ def test_dev_outputs_have_their_own_names(tiny):
     score_all.main(["--split", "dev", "--pred-dir", str(tiny / "predictions"),
                     "--manifest-dir", str(tiny / "manifests"), "--out-dir", str(out)])
     assert (out / "results_table_dev.csv").exists() and not (out / "results_table.csv").exists()
+
+
+def test_heard_test_speakers_read_from_audit():
+    heard = score_all.heard_test_speakers()
+    if not score_all.AUDIT.exists():
+        pytest.skip("no audit yet")
+    # Every baseline has a row in the audit, and the audit's answers are kept as written.
+    assert set(heard) >= {name for name, _ in score_all.BASELINES}
+    assert heard["wav2vec2-cv-eu"] == "No" and heard["hitz-ctc"] == "Yes"
+
+
+def test_readme_updated_between_markers(tiny):
+    readme = tiny / "README.md"
+    readme.write_text(f"# Title\n\nBefore.\n\n{score_all.README_START}\nold numbers\n{score_all.README_END}\n\nAfter.\n",
+                      encoding="utf-8")
+    score_all.main(["--pred-dir", str(tiny / "predictions"), "--manifest-dir", str(tiny / "manifests"),
+                    "--out-dir", str(tiny / "results"), "--readme", str(readme)])
+    text = readme.read_text(encoding="utf-8")
+    assert "old numbers" not in text and "Before." in text and "After." in text
+    assert "### Baselines" in text and "# Results" not in text
+    assert text.count(score_all.README_START) == 1 and text.count(score_all.README_END) == 1
+
+
+def test_readme_without_markers_untouched(tiny):
+    readme = tiny / "README.md"
+    readme.write_text("# Title\n", encoding="utf-8")
+    score_all.main(["--pred-dir", str(tiny / "predictions"), "--manifest-dir", str(tiny / "manifests"),
+                    "--out-dir", str(tiny / "results"), "--readme", str(readme)])
+    assert readme.read_text(encoding="utf-8") == "# Title\n"

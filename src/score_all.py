@@ -11,6 +11,8 @@ Writes (for --split dev the file names end in _dev instead)
   results/results_table.csv / .md              one row per baseline and per fine-tuning condition
   results/paired_comparisons.csv               the five fixed comparisons (see COMPARISONS)
   results/per_run_test.csv                     one row per scored run, every seed separately
+  README.md                                    the same tables, between the results markers
+                                               (test split and default --out-dir only)
 
 Scoring (report/scoring_policy.md):
   * Reference and hypothesis go through src/normalize.py. Nothing else is changed.
@@ -84,6 +86,25 @@ COMPARISONS = [
 ]
 
 SEED_RUN = re.compile(r"^(ft-[a-z]+)_seed(\d+)$")
+
+AUDIT = ROOT / "report" / "baseline_audit.md"
+README = ROOT / "README.md"
+README_START = "<!-- results:start (written by src/score_all.py, do not edit by hand) -->"
+README_END = "<!-- results:end -->"
+
+
+def heard_test_speakers(audit: Path = AUDIT) -> dict[str, str]:
+    """Run name -> the "Heard our test speakers?" cell of report/baseline_audit.md (Tugra's audit)."""
+    if not audit.exists():
+        return {}
+    header, out = None, {}
+    for line in audit.read_text(encoding="utf-8").splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if header is None and "Heard our test speakers?" in cells:
+            header = cells
+        elif header and len(cells) == len(header) and cells[0].startswith("`"):
+            out[cells[0].strip("`")] = cells[header.index("Heard our test speakers?")].split(" (")[0]
+    return out
 
 
 # ---------------------------------------------------------------- counting errors
@@ -318,12 +339,14 @@ def _p(p: float | None) -> str:
     return "" if p is None else ("< 0.001" if p < 0.001 else f"{p:.3f}")
 
 
-def table_rows(scored: dict[str, Scored]) -> list[dict]:
+def table_rows(scored: dict[str, Scored], heard: dict[str, str] | None = None) -> list[dict]:
+    heard = heard or {}
     rows = []
     for name, model in BASELINES:
         s = scored.get(name)
         rows.append({
             "part": "Baselines", "run": name, "trained_on": model, "seeds": "",
+            "heard_test_speakers": heard.get(name, ""),
             "wer": s and s.counts.wer, "wer_ci_low": s and s.wer_ci[0], "wer_ci_high": s and s.wer_ci[1],
             "wer_sd": None, "cer": s and s.counts.cer, "cer_ci_low": s and s.cer_ci[0],
             "cer_ci_high": s and s.cer_ci[1], "cer_sd": None, "per_seed_wer": "",
@@ -335,6 +358,7 @@ def table_rows(scored: dict[str, Scored]) -> list[dict]:
         seed_cers = [c.cer for c in s.seeds.values()] if s else []
         rows.append({
             "part": "Our contribution", "run": name, "trained_on": data,
+            "heard_test_speakers": "No",
             "seeds": " ".join(str(k) for k in s.seeds) if s else "",
             "wer": s and s.counts.wer, "wer_ci_low": s and s.wer_ci[0], "wer_ci_high": s and s.wer_ci[1],
             "wer_sd": statistics.stdev(seed_wers) if len(seed_wers) > 1 else None,
@@ -354,7 +378,7 @@ def write_csv(path: Path, rows: list[dict], columns: list[str]) -> None:
             w.writerow({k: (_f(v, 6) if isinstance(v, float) else ("" if v is None else v)) for k, v in r.items()})
 
 
-def write_markdown(path: Path, split: str, rows: list[dict], comparisons: list[dict], n_clips: int) -> None:
+def results_markdown(split: str, rows: list[dict], comparisons: list[dict], n_clips: int) -> str:
     def ci(r, m):
         return f"[{_f(r[m + '_ci_low'])}, {_f(r[m + '_ci_high'])}]" if r[m] is not None else ""
 
@@ -368,19 +392,22 @@ def write_markdown(path: Path, split: str, rows: list[dict], comparisons: list[d
         "`src/normalize.py`. 95% intervals: bootstrap over clips, "
         f"{RESAMPLES:,} resamples, seed {SEED}.", "",
         "## Baselines (pretrained models, no training by us)", "",
-        "| Run | Model | WER | WER 95% CI | CER | CER 95% CI |",
-        "|---|---|---|---|---|---|",
+        "Heard our test speakers: from `report/baseline_audit.md`. A model that heard them was "
+        "trained on this corpus, so the comparison is in its favour.", "",
+        "| Run | Model | Heard our test speakers? | WER | WER 95% CI | CER | CER 95% CI |",
+        "|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         if r["part"] == "Baselines":
             if r["status"] == "scored":
-                out.append(f"| `{r['run']}` | `{r['trained_on']}` | {_f(r['wer'])} | {ci(r, 'wer')} | {_f(r['cer'])} | {ci(r, 'cer')} |")
+                out.append(f"| `{r['run']}` | `{r['trained_on']}` | {r['heard_test_speakers']} | {_f(r['wer'])} | "
+                           f"{ci(r, 'wer')} | {_f(r['cer'])} | {ci(r, 'cer')} |")
             else:
-                out.append(f"| `{r['run']}` | `{r['trained_on']}` | not scored yet | | | |")
+                out.append(f"| `{r['run']}` | `{r['trained_on']}` | {r['heard_test_speakers']} | not scored yet | | | |")
     out += [
         "", "## Our contribution (Whisper-small fine-tuned)", "",
         "Mean over seeds ± SD over seeds. The interval is the bootstrap over clips of the per-clip "
-        "mean over seeds.", "",
+        "mean over seeds. None of our training sets contains a `dev` or `test` speaker.", "",
         "| Run | Training set | Seeds | WER | WER 95% CI | CER | CER 95% CI | WER per seed |",
         "|---|---|---|---|---|---|---|---|",
     ]
@@ -406,7 +433,20 @@ def write_markdown(path: Path, split: str, rows: list[dict], comparisons: list[d
                        f"{c['cer_diff']:+.4f} | [{c['cer_ci_low']:+.4f}, {c['cer_ci_high']:+.4f}] | {_p(c['cer_p_value'])} |")
         else:
             out.append(f"| `{c['a']}` | `{c['b']}` | {c['question']}{note} | not scored yet | | | | | |")
-    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+    return "\n".join(out) + "\n"
+
+
+def update_readme(readme: Path, markdown: str) -> bool:
+    """Put the results between the README's markers, one heading level down. False if no markers."""
+    text = readme.read_text(encoding="utf-8")
+    if README_START not in text or README_END not in text:
+        return False
+    body = markdown.split("\n", 2)[2]  # drop the "# Results" title line and the blank line after it
+    body = "\n".join("#" + line if line.startswith("## ") else line for line in body.splitlines())
+    head, rest = text.split(README_START, 1)
+    tail = rest.split(README_END, 1)[1]
+    readme.write_text(f"{head}{README_START}\n{body.strip()}\n{README_END}{tail}", encoding="utf-8")
+    return True
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -415,18 +455,26 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--pred-dir", default=str(ROOT / "results" / "predictions"))
     ap.add_argument("--manifest-dir", default=str(ROOT / "data" / "raw" / "manifests"))
     ap.add_argument("--out-dir", default=str(ROOT / "results"))
+    ap.add_argument("--readme", default=None,
+                    help="README to update between its results markers (default: README.md, only for the test "
+                         "split and the default --out-dir)")
     args = ap.parse_args(argv)
 
     pred_dir, manifest_dir, out_dir = Path(args.pred_dir), Path(args.manifest_dir), Path(args.out_dir)
     scored, per_run, resamples = score_split(args.split, pred_dir, manifest_dir)
     best_ft = best_condition_on_dev(pred_dir, manifest_dir)
     comparisons = compare(scored, resamples, best_ft)
-    rows = table_rows(scored)
+    rows = table_rows(scored, heard_test_speakers())
 
     tag = "" if args.split == "test" else f"_{args.split}"
     out_dir.mkdir(parents=True, exist_ok=True)
     write_csv(out_dir / f"results_table{tag}.csv", rows, list(rows[0]))
-    write_markdown(out_dir / f"results_table{tag}.md", args.split, rows, comparisons, len(resamples[0]))
+    markdown = results_markdown(args.split, rows, comparisons, len(resamples[0]))
+    (out_dir / f"results_table{tag}.md").write_text(markdown, encoding="utf-8")
+    readme = Path(args.readme) if args.readme else (
+        README if args.split == "test" and out_dir.resolve() == (ROOT / "results").resolve() else None)
+    if readme and readme.exists() and update_readme(readme, markdown):
+        print(f"Results written into {readme}")
     cmp_cols = ["a", "b", "question", "note"] + [f"{m}_{k}" for m in ("wer", "cer")
                                                   for k in ("diff", "ci_low", "ci_high", "p_value")]
     write_csv(out_dir / f"paired_comparisons{tag}.csv", comparisons, cmp_cols)
