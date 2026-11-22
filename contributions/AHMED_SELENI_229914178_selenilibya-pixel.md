@@ -1,30 +1,36 @@
-# Contribution: Ahmed Seleni (229914178, @selinilibya-pixel)
+# Contribution: Ahmed Seleni (229914178, @selenilibya-pixel)
 
-Role: licence and citation files, timing, runtime table, two benchmark models, figures.
+> Note from the coordinator (Mahmut Ornek, 22 November): the version of this file that was
+> uploaded still had the template placeholders unfilled, and it described work that is not in
+> the repository. This version lists only what the repository history shows. Everything below
+> comes from the commit of 22 November (3976da8) and the files it added.
 
 ## What I did
 
-**Licence and citation files**
-- `LICENSE`: MIT for our code, plus a paragraph saying the data in `data/` is the Basque Parliament Speech Corpus 1.0 (CC0).
-- `CITATION.md`: the corpus and its paper (doi:10.3390/app14051951), and every model in the results table with its link and licence, including the CC-BY-NC-SA licence of `Ansu/mHubert-basque-ASR`. I checked each licence on the model's Hugging Face page.
+All in one commit on 22 November, uploaded through the GitHub web interface:
 
-**Timing**
-- `src/timing.py`: the timing pass. It uses the same 100 dev clips for every model, with 5 warm-up clips, batch size 1, on a Colab T4. The clock runs from "audio in memory" to "text returned", and model loading is excluded. It records RTFx, real-time factor, median and 95th-percentile time per clip, the GPU name and the precision.
-- `src/runtime_table.py`: reads the timing and training-log JSON files and writes `results/runtime_table.md`. Nobody edits that table by hand.
-- Timing files I ran on Colab T4: <LIST: e.g. whisper-large-v3, mhubert-basque, ...>
-- Timing files run by others: <LIST: e.g. NeMo models by Tuğra>
-
-**Benchmark runs**
-- `whisper-large-v3` and `mhubert-basque` on dev and test with `src/transcribe.py`: <DONE / NOT DONE>, run on <HARDWARE>.
-- `qwen3-asr`: <DONE by me / run by NAME / not done>.
-
-**Figures**
-- <`results/figures/fig3_speed_accuracy.png` and `src/plot_figures.py`: DONE / NOT DONE>. The benchmark and cleaning figures are Shahem's `wer_ci.png`.
+- **`LICENSE`** (first version): MIT licence for our code, plus a paragraph saying the data in
+  `data/` is the Basque Parliament Speech Corpus 1.0 (CC0) and that the pretrained models keep
+  their own licences.
+- **`CITATION.md`** (first version): the corpus, its paper (doi:10.3390/app14051951) with a
+  BibTeX entry, and the models with their links and licences, including the non-commercial
+  CC-BY-NC-SA licence of `Ansu/mHubert-basque-ASR`.
+- **`src/timing.py`** (first version): a timing helper that measures every model on the same
+  100 dev clips, at batch size 1, after 5 warm-up clips, from "audio in memory" to "text
+  returned", with model loading excluded. It records RTFx, the real-time factor, the median and
+  95th-percentile time per clip, the GPU and the precision.
+- **`src/runtime_table.py`** (first version): reads the timing JSON files and the training logs,
+  and writes `results/runtime_table.md`.
 
 ## How I worked
-- I committed my own files from my own account.
-- I used an AI assistant (Claude) to draft `LICENSE`, `CITATION.md`, `timing.py` and `runtime_table.py`. I <reviewed / tested / changed> them: <WHAT YOU CHANGED OR CHECKED>.
-- Nothing was chosen using test scores. The timing clips come from dev only.
+- I used an AI assistant (Claude) to draft `LICENSE`, `CITATION.md`, `timing.py` and
+  `runtime_table.py`.
 
-## What did not get done
-- <ANYTHING MISSING, OR "Nothing.">
+## What did not get done by me
+- The files were uploaded to the repository root under browser-copy names. Mahmut moved them to
+  the paths in the task file.
+- Mahmut then corrected them: `CITATION.md` (it listed three models we do not run and missed
+  two we do), the copyright line in `LICENSE`, and the timing and runtime-table scripts (token
+  limit, NeMo loading, models we do not run, training time).
+- The `whisper-large-v3` and `mhubert-basque` runs, the timing pass and the runtime table were
+  done by Mahmut. The figures are Shahem's.
