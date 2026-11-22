@@ -50,3 +50,9 @@
   checkpoint.
 - Counted every reference with Whisper's tokenizer (longest: 75 tokens), which settled that the
   128-token limit stays and that clips hitting it are repetition loops.
+- Ran the whisper-large-v3 and mhubert-basque baselines (dev and test) on my GPU.
+- Moved Seleni's uploaded files to their paths and fixed them (CITATION.md for the models we
+  run, the LICENSE copyright line, the timing and runtime-table scripts), then ran the timing
+  pass for all eight baselines on Colab T4 and wrote results/runtime_table.md.
+- Fixed requirements-nemo.txt (NeMo ASR extras and missing pins) after it failed on a fresh
+  Colab.
