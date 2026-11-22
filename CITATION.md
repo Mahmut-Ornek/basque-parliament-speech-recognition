@@ -33,12 +33,11 @@ One row per run name in `results/results_table.*`.
 |---|---|---|---|
 | `whisper-large-v3` | OpenAI Whisper large-v3 | https://huggingface.co/openai/whisper-large-v3 | Apache-2.0 |
 | `whisper-small-zeroshot` and all `ft-*` runs | OpenAI Whisper small (the `ft-*` runs are our fine-tunes of it) | https://huggingface.co/openai/whisper-small | Apache-2.0 |
-| `qwen3-asr` | Qwen3-ASR 1.7B | https://huggingface.co/Qwen/Qwen3-ASR-1.7B | Apache-2.0 |
-| `parakeet-v3` | NVIDIA Parakeet TDT 0.6B v3 | https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3 | CC-BY-4.0 |
-| `canary-v2` | NVIDIA Canary 1B v2 | https://huggingface.co/nvidia/canary-1b-v2 | CC-BY-4.0 |
 | `hitz-ctc` | HiTZ/Aholab Conformer-CTC large (Basque) | https://huggingface.co/HiTZ/stt_eu_conformer_ctc_large | Apache-2.0 |
 | `hitz-transducer` | HiTZ/Aholab Conformer-Transducer large (Basque) | https://huggingface.co/HiTZ/stt_eu_conformer_transducer_large | Apache-2.0 |
+| `parakeet-v3-basque` | NVIDIA Parakeet TDT 0.6B v3, fine-tuned for Basque by itzune | https://huggingface.co/itzune/parakeet-tdt-0.6b-v3-basque | see model card |
 | `wav2vec2-bp1` | wav2vec 2.0 XLS-R 300M, fine-tuned on the Basque Parliament corpus (Spanish + Basque) | https://huggingface.co/gttsehu/wav2vec2-xls-r-300m-bp1-es_eu | Apache-2.0 |
+| `wav2vec2-cv-eu` | wav2vec 2.0 XLSR-53, fine-tuned for Basque on Common Voice | https://huggingface.co/stefan-it/wav2vec2-large-xlsr-53-basque | see model card |
 | `mhubert-basque` | mHuBERT-147 fine-tuned for Basque CTC ASR (Ansu) | https://huggingface.co/Ansu/mHubert-basque-ASR | **CC-BY-NC-SA-4.0** |
 
 ### Notes on the licences
@@ -50,8 +49,11 @@ One row per run name in `results/results_table.*`.
   reusing them should check the NC and SA terms for their own use. The model
   card lists `utter-project/mHuBERT-147` as its base model and
   `asierhv/composite_corpus_eu_v2.1` as its training data.
-- **NVIDIA Parakeet and Canary (CC-BY-4.0)** require attribution, which this file
-  gives.
+- **`whisper-large-v3`** is also the judge model of our cleaning script (`src/clean.py`).
+- Canary-1B-v2, Parakeet-TDT-0.6B-v3 and Qwen3-ASR are **not run**: their model cards do not
+  list Basque (see the README, "Baselines not run"). `parakeet-v3-basque` is a third-party
+  Basque fine-tune of Parakeet-TDT-0.6B-v3; the base model's card gives CC-BY-4.0, so check
+  the fine-tune's own card for its terms.
 - **Both HiTZ models and `wav2vec2-bp1` were trained on this corpus's training
   data** (the HiTZ cards list `gttsehu/basque_parliament_1`; the HiTZ transducer
   card names its `train_clean` split). They are in-domain baselines.
@@ -65,8 +67,7 @@ One row per run name in `results/results_table.*`.
 
 - Whisper: Radford et al., *Robust Speech Recognition via Large-Scale Weak
   Supervision*, arXiv:2212.04356.
-- Qwen3-ASR: Qwen Team, *Qwen3-ASR Technical Report*, arXiv:2601.21337.
-- Canary-1B-v2 and Parakeet-TDT-0.6B-v3: Sekoyan, Koluguri, Tadevosyan et al.,
+- Parakeet-TDT-0.6B-v3 (base model of `parakeet-v3-basque`): Sekoyan, Koluguri, Tadevosyan et al.,
   *Canary-1B-v2 & Parakeet-TDT-0.6B-v3: Efficient and High-Performance Models
   for Multilingual ASR and AST*, arXiv:2509.14128.
 - Conformer (the HiTZ architecture): Gulati et al., *Conformer:
@@ -74,6 +75,5 @@ One row per run name in `results/results_table.*`.
 
 ## Software
 
-Evaluation uses `jiwer`; models run through Hugging Face `transformers`, NVIDIA
-NeMo and the `qwen-asr` package. Exact versions are pinned in `requirements.txt`,
-`requirements-nemo.txt` and `requirements-qwen.txt`.
+Evaluation uses `jiwer`; models run through Hugging Face `transformers` and NVIDIA
+NeMo. Exact versions are pinned in `requirements.txt` and `requirements-nemo.txt`.

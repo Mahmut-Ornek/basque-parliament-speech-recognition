@@ -19,8 +19,8 @@ RESULTS = ROOT / "results"
 
 # Display order. Any run found on disk but not listed here is appended at the end of its part.
 BASELINE_ORDER = [
-    "whisper-small-zeroshot", "whisper-large-v3", "qwen3-asr", "parakeet-v3", "canary-v2",
-    "hitz-ctc", "hitz-transducer", "wav2vec2-bp1", "mhubert-basque",
+    "whisper-small-zeroshot", "whisper-large-v3", "hitz-ctc", "hitz-transducer",
+    "parakeet-v3-basque", "wav2vec2-bp1", "wav2vec2-cv-eu", "mhubert-basque",
 ]
 # Key names tried, in order, because the run scripts may name them differently.
 TRAIN_TIME_KEYS = ["training_time_seconds", "train_time_seconds", "training_seconds", "train_seconds",
@@ -83,6 +83,8 @@ def collect_training() -> list[dict]:
         if not rec:
             continue
         seconds = first_key(rec, TRAIN_TIME_KEYS)
+        if seconds is None and isinstance(rec.get("total_minutes"), (int, float)):  # src/finetune_whisper.py
+            seconds = rec["total_minutes"] * 60
         rows.append({
             "run": p.stem,
             "seconds": float(seconds) if isinstance(seconds, (int, float)) else None,
@@ -164,7 +166,9 @@ def main() -> None:
                      f"| {fmt(minutes, 1)} |")
     lines += [
         "",
-        "Fine-tuned runs share the architecture of `whisper-small-zeroshot`, so their inference speed equals that row.",
+        "The fine-tuned runs were not timed separately: they have the architecture and decoding settings of "
+        "`whisper-small-zeroshot`, but zero-shot Whisper-small loops on some clips (see `report/error_analysis.md`), "
+        "which makes its row slower than the fine-tuned models would be.",
         "",
     ]
 

@@ -13,15 +13,19 @@ Rules (one boundary for every model):
 
 Run it from a clone of the repo (the manifests and audio come from the repo):
 
-  python src/timing.py --family whisper --model openai/whisper-large-v3 --name whisper-large-v3
-  python src/timing.py --family ctc     --model Ansu/mHubert-basque-ASR --name mhubert-basque
-  python src/timing.py --family ctc     --model gttsehu/wav2vec2-xls-r-300m-bp1-es_eu --name wav2vec2-bp1
   python src/timing.py --family whisper --model openai/whisper-small --name whisper-small-zeroshot
-  python src/timing.py --family nemo    --model nvidia/parakeet-tdt-0.6b-v3 --name parakeet-v3
+  python src/timing.py --family whisper --model openai/whisper-large-v3 --name whisper-large-v3
+  python src/timing.py --family ctc     --model gttsehu/wav2vec2-xls-r-300m-bp1-es_eu --name wav2vec2-bp1
+  python src/timing.py --family ctc     --model stefan-it/wav2vec2-large-xlsr-53-basque --name wav2vec2-cv-eu
+  python src/timing.py --family ctc     --model Ansu/mHubert-basque-ASR --name mhubert-basque
+  # NeMo environment (requirements-nemo.txt):
   python src/timing.py --family nemo    --model HiTZ/stt_eu_conformer_ctc_large --name hitz-ctc
   python src/timing.py --family nemo    --model HiTZ/stt_eu_conformer_transducer_large --name hitz-transducer
-  python src/timing.py --family nemo    --model nvidia/canary-1b-v2 --name canary-v2 --source-lang es --target-lang es
-  python src/timing.py --family qwen    --model Qwen/Qwen3-ASR-1.7B --name qwen3-asr
+  python src/timing.py --family nemo    --model itzune/parakeet-tdt-0.6b-v3-basque --name parakeet-v3-basque
+
+Precision: the same as each model's accuracy run (default: float16 for Whisper and CTC models,
+float32 for NeMo models). Whisper uses greedy decoding, language "eu" and max_new_tokens=128,
+exactly as src/transcribe.py.
 
 Output: results/timing/<name>_dev100.json. src/runtime_table.py reads these.
 
@@ -34,7 +38,6 @@ import csv
 import hashlib
 import json
 import time
-from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -174,7 +177,7 @@ def load_whisper(args):
     device, dtype, precision = _device_and_dtype(args.precision)
     processor = WhisperProcessor.from_pretrained(args.model)
     model = WhisperForConditionalGeneration.from_pretrained(args.model, torch_dtype=dtype).to(device).eval()
-    gen = dict(language="eu", task="transcribe", num_beams=1, max_new_tokens=225)
+    gen = dict(language="eu", task="transcribe", num_beams=1, max_new_tokens=128)  # same as src/transcribe.py
 
     def transcribe(audio):
         feats = processor(audio, sampling_rate=SAMPLE_RATE, return_tensors="pt").input_features
@@ -207,44 +210,30 @@ def load_ctc(args):
 def load_nemo(args):
     import nemo.collections.asr as nemo_asr
 
-    model = nemo_asr.models.ASRModel.from_pretrained(args.model).eval()
+    import inspect
+
+    import torch
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = nemo_asr.models.ASRModel.from_pretrained(model_name=args.model).to(device).eval()
     extra = {}
-    if args.source_lang:  # Canary needs a language from its own list
-        extra["source_lang"] = args.source_lang
-        extra["target_lang"] = args.target_lang or args.source_lang
+    if "use_lhotse" in inspect.signature(model.transcribe).parameters:
+        extra["use_lhotse"] = False  # as in src/run_nemo.py: transcribe in-memory arrays directly
 
     def transcribe(audio):
         out = model.transcribe([audio], batch_size=1, verbose=False, **extra)
         if isinstance(out, tuple):  # older NeMo returns (texts, alt_texts) for transducers
             out = out[0]
         hyp = out[0]
+        if isinstance(hyp, list):
+            hyp = hyp[0]
         return (hyp.text if hasattr(hyp, "text") else str(hyp)).strip()
 
-    return transcribe, {"parameters": _count_params(model), "precision": args.precision, "decoding": {"nemo_default": True, **extra}}
+    return transcribe, {"parameters": _count_params(model), "precision": args.precision, "decoding": "NeMo default (greedy)"}
 
 
-def load_qwen(args):
-    # UNTESTED: written from the qwen-asr package's documented usage. Check it against the
-    # lecture's slides 42-43 and src/run_qwen.py before the real run.
-    import torch
-    from qwen_asr import Qwen3ASRModel
-
-    dtype = getattr(torch, args.precision)
-    model = Qwen3ASRModel.from_pretrained(args.model, dtype=dtype, device_map="cuda:0", max_new_tokens=256)
-    detected: Counter = Counter()
-
-    def transcribe(audio):
-        res = model.transcribe(audio=(audio, SAMPLE_RATE), language=None)  # let it detect the language
-        detected[getattr(res[0], "language", None)] += 1
-        return res[0].text.strip()
-
-    meta = {"parameters": _count_params(getattr(model, "model", model)), "precision": args.precision,
-            "decoding": {"language": None}, "_detected": detected}
-    return transcribe, meta
-
-
-LOADERS = {"whisper": load_whisper, "ctc": load_ctc, "nemo": load_nemo, "qwen": load_qwen}
-DEFAULT_PRECISION = {"whisper": "float16", "ctc": "float16", "nemo": "float32", "qwen": "bfloat16"}
+LOADERS = {"whisper": load_whisper, "ctc": load_ctc, "nemo": load_nemo}
+DEFAULT_PRECISION = {"whisper": "float16", "ctc": "float16", "nemo": "float32"}
 
 
 def model_revision(model_id: str) -> str | None:
@@ -264,8 +253,6 @@ def main() -> None:
     ap.add_argument("--name", required=True, help="run name, e.g. whisper-large-v3")
     ap.add_argument("--precision", default=None, help="float16, float32 or bfloat16 (default depends on family)."
                     " Use the precision the accuracy run used.")
-    ap.add_argument("--source-lang", default=None, help="Canary only")
-    ap.add_argument("--target-lang", default=None, help="Canary only (defaults to source-lang)")
     ap.add_argument("--manifest", type=Path, default=DEV_MANIFEST)
     ap.add_argument("--out-dir", type=Path, default=OUT_DIR)
     args = ap.parse_args()
@@ -278,7 +265,6 @@ def main() -> None:
     transcribe, meta = LOADERS[args.family](args)
     result = time_clips(transcribe, clips, n_warmup=N_WARMUP)
 
-    detected = meta.pop("_detected", None)
     record = {
         "name": args.name,
         "model": args.model,
@@ -295,8 +281,6 @@ def main() -> None:
         **meta,
         **result,
     }
-    if detected is not None:
-        record["detected_languages"] = dict(detected)
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     out = args.out_dir / f"{args.name}_dev{N_TIMED}.json"
