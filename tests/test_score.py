@@ -179,3 +179,14 @@ def test_readme_without_markers_untouched(tiny):
     score_all.main(["--pred-dir", str(tiny / "predictions"), "--manifest-dir", str(tiny / "manifests"),
                     "--out-dir", str(tiny / "results"), "--readme", str(readme)])
     assert readme.read_text(encoding="utf-8") == "# Title\n"
+
+
+def test_speed_table_copied_from_runtime_table(tmp_path):
+    runtime = tmp_path / "runtime_table.md"
+    runtime.write_text("# Hardware\n\n## Inference speed (pretrained models)\n\nText.\n\n| Run | RTFx |\n|---|---:|\n"
+                       "| `a` | 1.0 |\n\n- note\n\n## Training time\n\n| x | y |\n", encoding="utf-8")
+    assert score_all.speed_table(runtime) == "| Run | RTFx |\n|---|---:|\n| `a` | 1.0 |"
+    readme = tmp_path / "README.md"
+    readme.write_text(f"A\n{score_all.SPEED_START}\nold\n{score_all.SPEED_END}\nB\n", encoding="utf-8")
+    assert score_all.replace_block(readme, score_all.SPEED_START, score_all.SPEED_END, "| new |")
+    assert readme.read_text(encoding="utf-8") == f"A\n{score_all.SPEED_START}\n| new |\n{score_all.SPEED_END}\nB\n"

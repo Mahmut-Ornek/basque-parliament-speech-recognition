@@ -1,6 +1,6 @@
 a,b,question,note,wer_diff,wer_ci_low,wer_ci_high,wer_p_value,cer_diff,cer_ci_low,cer_ci_high,cer_p_value
-ft-ours,ft-rawmatched,Does cleaning help beyond having less data?,,-0.004001,-0.008927,0.000993,0.116000,-0.001222,-0.002756,0.000236,0.098000
-ft-ours,ft-authors,Does our cleaning match the authors' cleaning?,,0.002843,-0.001946,0.007757,0.257000,0.002147,0.000701,0.003623,0.002000
-ft-authors,ft-rawmatched,Does the authors' cleaning help beyond having less data?,,-0.006843,-0.012420,-0.001544,0.010000,-0.003368,-0.005137,-0.001817,0.000000
-ft-raw,ft-rawmatched,Do more but noisier hours win?,,-0.006791,-0.011985,-0.001317,0.019000,0.001063,-0.001666,0.005142,0.658000
-ft-authors,whisper-small-zeroshot,How much does fine-tuning help?,A chosen by mean dev WER,-0.795968,-0.849055,-0.746979,0.000000,-0.349555,-0.382158,-0.320179,0.000000
+ft-ours,ft-rawmatched,Does cleaning help beyond having less data?,,-0.002737,-0.007085,0.001505,0.199000,-0.000769,-0.003214,0.001565,0.521000
+ft-ours,ft-authors,Does our cleaning match the authors' cleaning?,,0.004071,0.000208,0.007764,0.038000,0.002648,0.001066,0.004486,0.000000
+ft-authors,ft-rawmatched,Does the authors' cleaning help beyond having less data?,,-0.006808,-0.011389,-0.002434,0.002000,-0.003416,-0.005737,-0.001490,0.000000
+ft-raw,ft-rawmatched,Do more but noisier hours win?,,-0.007422,-0.011342,-0.003786,0.001000,-0.000465,-0.002845,0.001732,0.678000
+ft-authors,whisper-small-zeroshot,How much does fine-tuning help?,A chosen by mean dev WER,-0.795126,-0.848697,-0.746952,0.000000,-0.349016,-0.381943,-0.319792,0.000000

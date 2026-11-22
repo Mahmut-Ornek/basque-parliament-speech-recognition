@@ -6,8 +6,10 @@ Reads results/results_table.csv (written by src/score_all.py) and writes
 results/figures/wer_ci.png. Run it after score_all.py; nothing is typed by hand.
 
 Each run is a dot at its WER with a horizontal line from the low to the high end of its 95%
-bootstrap interval. Left panel: every scored run on one scale. Right panel: the four fine-tuning
-conditions only, zoomed in, because their differences are too small to see next to the baselines.
+bootstrap interval, with end caps. Left panel: every scored run on a logarithmic WER axis, because
+the scores run from about 0.04 to above 1 and on a straight axis the intervals of the best models
+would be hidden under their dots. Right panel: the four fine-tuning conditions only, zoomed in on a
+straight axis, because their differences are too small to see next to the baselines.
 Colour and marker shape say whether a model heard our test speakers (from report/baseline_audit.md):
 the shape repeats the colour's meaning, so the figure also reads in grey.
 """
@@ -47,8 +49,9 @@ def draw(ax, rows: list[dict], label_fmt: str) -> None:
     for y, r in enumerate(rows):
         _, colour, marker = GROUPS[r["group"]]
         ax.hlines(y, r["wer_ci_low"], r["wer_ci_high"], color=colour, linewidth=2, zorder=2)
-        ax.plot(r["wer"], y, marker=marker, markersize=8, color=colour,
-                markeredgecolor=SURFACE, markeredgewidth=1.5, zorder=3)
+        ax.vlines([r["wer_ci_low"], r["wer_ci_high"]], y - 0.22, y + 0.22, color=colour, linewidth=1.5, zorder=2)
+        ax.plot(r["wer"], y, marker=marker, markersize=6, color=colour,
+                markeredgecolor=SURFACE, markeredgewidth=1, zorder=3)
         ax.annotate(label_fmt.format(r["wer"]), (r["wer_ci_high"], y), xytext=(6, 0),
                     textcoords="offset points", va="center", fontsize=9, color=INK)
     ax.set_yticks(range(len(rows)), [r["run"] for r in rows], fontsize=10, color=INK)
@@ -78,8 +81,12 @@ def main(argv: list[str] | None = None) -> None:
     fig.patch.set_facecolor(SURFACE)
 
     draw(left, rows, "{:.3f}")
-    left.set_xlim(0, max(1.0, max(r["wer_ci_high"] for r in rows) * 1.12))
-    left.set_xlabel("Test WER (lower is better)", fontsize=10, color=MUTED)
+    left.set_xscale("log")
+    left.set_xlim(min(r["wer_ci_low"] for r in rows) * 0.8, max(r["wer_ci_high"] for r in rows) * 1.6)
+    ticks = [t for t in (0.03, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0) if left.get_xlim()[0] <= t <= left.get_xlim()[1]]
+    left.set_xticks(ticks, [f"{t:g}" for t in ticks])
+    left.minorticks_off()
+    left.set_xlabel("Test WER, logarithmic axis (lower is better)", fontsize=10, color=MUTED)
     left.set_title("All scored models", loc="left", fontsize=12, color=INK, fontweight="bold")
 
     if ours:

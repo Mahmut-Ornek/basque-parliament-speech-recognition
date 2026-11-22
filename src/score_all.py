@@ -91,6 +91,9 @@ AUDIT = ROOT / "report" / "baseline_audit.md"
 README = ROOT / "README.md"
 README_START = "<!-- results:start (written by src/score_all.py, do not edit by hand) -->"
 README_END = "<!-- results:end -->"
+SPEED_START = "<!-- speed:start (copied from results/runtime_table.md by src/score_all.py, do not edit by hand) -->"
+SPEED_END = "<!-- speed:end -->"
+RUNTIME_TABLE = ROOT / "results" / "runtime_table.md"
 
 
 def heard_test_speakers(audit: Path = AUDIT) -> dict[str, str]:
@@ -436,17 +439,40 @@ def results_markdown(split: str, rows: list[dict], comparisons: list[dict], n_cl
     return "\n".join(out) + "\n"
 
 
+def replace_block(readme: Path, start: str, end: str, body: str) -> bool:
+    """Replace the text between two marker lines of the README. False if the markers are missing."""
+    text = readme.read_text(encoding="utf-8")
+    if start not in text or end not in text:
+        return False
+    head, rest = text.split(start, 1)
+    tail = rest.split(end, 1)[1]
+    readme.write_text(f"{head}{start}\n{body.strip()}\n{end}{tail}", encoding="utf-8")
+    return True
+
+
 def update_readme(readme: Path, markdown: str) -> bool:
     """Put the results between the README's markers, one heading level down. False if no markers."""
-    text = readme.read_text(encoding="utf-8")
-    if README_START not in text or README_END not in text:
-        return False
     body = markdown.split("\n", 2)[2]  # drop the "# Results" title line and the blank line after it
     body = "\n".join("#" + line if line.startswith("## ") else line for line in body.splitlines())
-    head, rest = text.split(README_START, 1)
-    tail = rest.split(README_END, 1)[1]
-    readme.write_text(f"{head}{README_START}\n{body.strip()}\n{README_END}{tail}", encoding="utf-8")
-    return True
+    return replace_block(readme, README_START, README_END, body)
+
+
+def speed_table(runtime_md: Path) -> str | None:
+    """The inference-speed table of results/runtime_table.md (written by src/runtime_table.py)."""
+    if not runtime_md.exists():
+        return None
+    lines = runtime_md.read_text(encoding="utf-8").splitlines()
+    try:
+        start = next(i for i, l in enumerate(lines) if l.startswith("## Inference speed"))
+    except StopIteration:
+        return None
+    table = []
+    for line in lines[start + 1:]:
+        if line.startswith("|"):
+            table.append(line)
+        elif table:
+            break
+    return "\n".join(table) if table else None
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -475,6 +501,9 @@ def main(argv: list[str] | None = None) -> None:
         README if args.split == "test" and out_dir.resolve() == (ROOT / "results").resolve() else None)
     if readme and readme.exists() and update_readme(readme, markdown):
         print(f"Results written into {readme}")
+        table = speed_table(RUNTIME_TABLE)
+        if table and replace_block(readme, SPEED_START, SPEED_END, table):
+            print(f"Speed table copied into {readme}")
     cmp_cols = ["a", "b", "question", "note"] + [f"{m}_{k}" for m in ("wer", "cer")
                                                   for k in ("diff", "ci_low", "ci_high", "p_value")]
     write_csv(out_dir / f"paired_comparisons{tag}.csv", comparisons, cmp_cols)

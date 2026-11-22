@@ -1,13 +1,13 @@
 part,run,trained_on,seeds,heard_test_speakers,wer,wer_ci_low,wer_ci_high,wer_sd,cer,cer_ci_low,cer_ci_high,cer_sd,per_seed_wer,status
-Baselines,whisper-large-v3,openai/whisper-large-v3,,Unknown,,,,,,,,,,no prediction file
+Baselines,whisper-large-v3,openai/whisper-large-v3,,Unknown,0.427159,0.414635,0.440670,,0.120423,0.113134,0.128643,,,scored
 Baselines,whisper-small-zeroshot,openai/whisper-small,,Unknown,0.971119,0.922904,1.022031,,0.368349,0.337925,0.399459,,,scored
 Baselines,hitz-ctc,HiTZ/stt_eu_conformer_ctc_large,,Yes,0.052485,0.048357,0.057047,,0.015369,0.013957,0.016892,,,scored
 Baselines,hitz-transducer,HiTZ/stt_eu_conformer_transducer_large,,Yes,0.046154,0.042435,0.050146,,0.015154,0.013686,0.016761,,,scored
 Baselines,parakeet-v3-basque,itzune/parakeet-tdt-0.6b-v3-basque,,Yes,0.044321,0.040721,0.048278,,0.014465,0.013054,0.015993,,,scored
 Baselines,wav2vec2-bp1,gttsehu/wav2vec2-xls-r-300m-bp1-es_eu,,Yes,0.049597,0.045611,0.054097,,0.014342,0.012897,0.015822,,,scored
 Baselines,wav2vec2-cv-eu,stefan-it/wav2vec2-large-xlsr-53-basque,,No,0.305026,0.294912,0.315019,,0.061989,0.059177,0.064777,,,scored
-Baselines,mhubert-basque,Ansu/mHubert-basque-ASR,,Yes,,,,,,,,,,no prediction file
-Our contribution,ft-raw,"train_raw.csv: raw sample, leakage rule only (9.24 h)",3,No,0.208831,0.199130,0.219143,,0.052389,0.047997,0.058007,,0.2088,scored
-Our contribution,ft-rawmatched,"train_rawmatched.csv: random part of the raw sample, same hours as the cleaned sets",3,No,0.213552,0.204437,0.223046,,0.053768,0.049296,0.059242,,0.2136,scored
-Our contribution,ft-authors,train_authors.csv: the corpus authors' clean split,3,No,0.205221,0.197074,0.214174,,0.048689,0.046206,0.051190,,0.2052,scored
-Our contribution,ft-ours,train_ours.csv: our cleaning script,3,No,0.215884,0.207073,0.225277,,0.052328,0.049612,0.055245,,0.2159,scored
+Baselines,mhubert-basque,Ansu/mHubert-basque-ASR,,Yes,0.060372,0.055864,0.065047,,0.014886,0.013582,0.016335,,,scored
+Our contribution,ft-raw,"train_raw.csv: raw sample, leakage rule only (9.24 h)",1 2 3,No,0.208072,0.199705,0.216866,0.000997,0.051092,0.048051,0.054411,0.001195,0.2084 0.2069 0.2088,scored
+Our contribution,ft-rawmatched,"train_rawmatched.csv: random part of the raw sample, same hours as the cleaned sets",1 2 3,No,0.215329,0.206772,0.224271,0.001750,0.053245,0.050155,0.056340,0.000529,0.2154 0.2171 0.2136,scored
+Our contribution,ft-authors,train_authors.csv: the corpus authors' clean split,1 2 3,No,0.207702,0.199512,0.216325,0.002166,0.049414,0.046974,0.051916,0.000639,0.2087 0.2092 0.2052,scored
+Our contribution,ft-ours,train_ours.csv: our cleaning script,1 2 3,No,0.214977,0.206670,0.223844,0.000946,0.052170,0.049507,0.054900,0.000443,0.2140 0.2151 0.2159,scored

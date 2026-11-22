@@ -1,6 +1,6 @@
 # Shahem Hasunoglu — 2409015433 — @ShahemHassoun
 
-**Role:** scoring code and statistics, scoring policy, metric justification, README, presentation.
+**Role:** scoring code and statistics, scoring policy, metric justification, README, slides.
 
 **Question I answer:** under one fixed scoring policy, which differences between models are real
 and which are noise?
@@ -27,7 +27,7 @@ and which are noise?
     fine-tuned condition chosen on `dev`;
   - the results table in two parts, "Baselines" and "Our contribution", with the "heard our test
     speakers" column read from the baseline audit;
-  - writes `results/` and the README's results section, so no number is typed by hand;
+  - writes `results/` and the README's results and speed sections, so no number is typed by hand;
   - refuses partial prediction files and never scores a model without Basque support.
 
 ## Tests (`tests/test_normalize.py`, `tests/test_score.py`)
@@ -47,6 +47,7 @@ and which are noise?
   baselines not run, metrics, results, how to reproduce, seeds and hardware, every folder and
   root file.
 
-## Presentation
+## Slides
 
-Slides and the talk.
+The presentation slides, with every number taken from `results/` and the
+confidence-interval figure (`src/plot_results.py`), and the talk in the speaker notes.

@@ -161,14 +161,14 @@ Heard our test speakers: from `report/baseline_audit.md`. A model that heard the
 
 | Run | Model | Heard our test speakers? | WER | WER 95% CI | CER | CER 95% CI |
 |---|---|---|---|---|---|---|
-| `whisper-large-v3` | `openai/whisper-large-v3` | Unknown | not scored yet | | | |
+| `whisper-large-v3` | `openai/whisper-large-v3` | Unknown | 0.4378 | [0.4234, 0.4532] | 0.1256 | [0.1185, 0.1335] |
 | `whisper-small-zeroshot` | `openai/whisper-small` | Unknown | 1.0117 | [0.9636, 1.0656] | 0.4016 | [0.3718, 0.4345] |
 | `hitz-ctc` | `HiTZ/stt_eu_conformer_ctc_large` | Yes | 0.0475 | [0.0436, 0.0513] | 0.0151 | [0.0137, 0.0166] |
 | `hitz-transducer` | `HiTZ/stt_eu_conformer_transducer_large` | Yes | 0.0428 | [0.0392, 0.0464] | 0.0151 | [0.0137, 0.0167] |
 | `parakeet-v3-basque` | `itzune/parakeet-tdt-0.6b-v3-basque` | Yes | 0.0468 | [0.0432, 0.0504] | 0.0157 | [0.0142, 0.0173] |
-| `wav2vec2-bp1` | `gttsehu/wav2vec2-xls-r-300m-bp1-es_eu` | Yes | not scored yet | | | |
+| `wav2vec2-bp1` | `gttsehu/wav2vec2-xls-r-300m-bp1-es_eu` | Yes | 0.0467 | [0.0429, 0.0506] | 0.0145 | [0.0131, 0.0160] |
 | `wav2vec2-cv-eu` | `stefan-it/wav2vec2-large-xlsr-53-basque` | No | 0.3338 | [0.3232, 0.3443] | 0.0699 | [0.0670, 0.0730] |
-| `mhubert-basque` | `Ansu/mHubert-basque-ASR` | Yes | not scored yet | | | |
+| `mhubert-basque` | `Ansu/mHubert-basque-ASR` | Yes | 0.0594 | [0.0551, 0.0637] | 0.0163 | [0.0149, 0.0178] |
 
 ### Our contribution (Whisper-small fine-tuned)
 
@@ -176,10 +176,10 @@ Mean over seeds ± SD over seeds. The interval is the bootstrap over clips of th
 
 | Run | Training set | Seeds | WER | WER 95% CI | CER | CER 95% CI | WER per seed |
 |---|---|---|---|---|---|---|---|
-| `ft-raw` | train_raw.csv: raw sample, leakage rule only (9.24 h) | 3 | 0.2158 | [0.2070, 0.2257] | 0.0565 | [0.0526, 0.0614] | 0.2158 |
-| `ft-rawmatched` | train_rawmatched.csv: random part of the raw sample, same hours as the cleaned sets | 3 | 0.2226 | [0.2137, 0.2319] | 0.0554 | [0.0527, 0.0582] | 0.2226 |
-| `ft-authors` | train_authors.csv: the corpus authors' clean split | 3 | 0.2158 | [0.2068, 0.2248] | 0.0520 | [0.0495, 0.0547] | 0.2158 |
-| `ft-ours` | train_ours.csv: our cleaning script | 3 | 0.2186 | [0.2097, 0.2281] | 0.0542 | [0.0516, 0.0569] | 0.2186 |
+| `ft-raw` | train_raw.csv: raw sample, leakage rule only (9.24 h) | 1 2 3 | 0.2160 ± 0.0015 | [0.2076, 0.2249] | 0.0555 ± 0.0008 | [0.0524, 0.0587] | 0.2176 0.2146 0.2158 |
+| `ft-rawmatched` | train_rawmatched.csv: random part of the raw sample, same hours as the cleaned sets | 1 2 3 | 0.2234 ± 0.0011 | [0.2148, 0.2327] | 0.0560 ± 0.0011 | [0.0532, 0.0591] | 0.2229 0.2247 0.2226 |
+| `ft-authors` | train_authors.csv: the corpus authors' clean split | 1 2 3 | 0.2166 ± 0.0014 | [0.2078, 0.2253] | 0.0526 ± 0.0007 | [0.0499, 0.0553] | 0.2159 0.2182 0.2158 |
+| `ft-ours` | train_ours.csv: our cleaning script | 1 2 3 | 0.2207 ± 0.0038 | [0.2122, 0.2295] | 0.0552 ± 0.0013 | [0.0522, 0.0585] | 0.2184 0.2250 0.2186 |
 
 ### Paired comparisons (fixed before any test score)
 
@@ -187,30 +187,49 @@ Difference = A − B; negative means A makes fewer errors. Paired bootstrap on t
 
 | A | B | Question | WER diff | 95% CI | p | CER diff | 95% CI | p |
 |---|---|---|---|---|---|---|---|---|
-| `ft-ours` | `ft-rawmatched` | Does cleaning help beyond having less data? | -0.0040 | [-0.0089, +0.0010] | 0.116 | -0.0012 | [-0.0028, +0.0002] | 0.098 |
-| `ft-ours` | `ft-authors` | Does our cleaning match the authors' cleaning? | +0.0028 | [-0.0019, +0.0078] | 0.257 | +0.0021 | [+0.0007, +0.0036] | 0.002 |
-| `ft-authors` | `ft-rawmatched` | Does the authors' cleaning help beyond having less data? | -0.0068 | [-0.0124, -0.0015] | 0.010 | -0.0034 | [-0.0051, -0.0018] | < 0.001 |
-| `ft-raw` | `ft-rawmatched` | Do more but noisier hours win? | -0.0068 | [-0.0120, -0.0013] | 0.019 | +0.0011 | [-0.0017, +0.0051] | 0.658 |
-| `ft-authors` | `whisper-small-zeroshot` | How much does fine-tuning help? (A chosen by mean dev WER) | -0.7960 | [-0.8491, -0.7470] | < 0.001 | -0.3496 | [-0.3822, -0.3202] | < 0.001 |
+| `ft-ours` | `ft-rawmatched` | Does cleaning help beyond having less data? | -0.0027 | [-0.0071, +0.0015] | 0.199 | -0.0008 | [-0.0032, +0.0016] | 0.521 |
+| `ft-ours` | `ft-authors` | Does our cleaning match the authors' cleaning? | +0.0041 | [+0.0002, +0.0078] | 0.038 | +0.0026 | [+0.0011, +0.0045] | < 0.001 |
+| `ft-authors` | `ft-rawmatched` | Does the authors' cleaning help beyond having less data? | -0.0068 | [-0.0114, -0.0024] | 0.002 | -0.0034 | [-0.0057, -0.0015] | < 0.001 |
+| `ft-raw` | `ft-rawmatched` | Do more but noisier hours win? | -0.0074 | [-0.0113, -0.0038] | 0.001 | -0.0005 | [-0.0028, +0.0017] | 0.678 |
+| `ft-authors` | `whisper-small-zeroshot` | How much does fine-tuning help? (A chosen by mean dev WER) | -0.7951 | [-0.8487, -0.7470] | < 0.001 | -0.3490 | [-0.3819, -0.3198] | < 0.001 |
 <!-- results:end -->
 
 ![Test WER of every scored model with its 95% confidence interval](results/figures/wer_ci.png)
 
-Dot: test WER. Line: 95% confidence interval. Right panel: our four training sets, zoomed in.
+Dot: test WER. Line with end caps: 95% confidence interval. Left panel: every model, on a
+logarithmic axis so that the narrow intervals of the best models stay visible. Right panel: our four
+training sets, zoomed in.
 Drawn by `python src/plot_results.py` from `results/results_table.csv`.
 
 ### Error analysis
 
 Error types per model (wrong word endings, number errors, other substitutions, deletions,
-insertions, repetition loops) are in [`report/error_analysis.md`](report/error_analysis.md) and
-`results/error_types.csv`, written by `src/error_types.py`.
+insertions, repetition loops), plus a weighted WER that counts an error only in a word's ending as
+half an error, are in [`report/error_analysis.md`](report/error_analysis.md) and
+`results/error_types.csv`, written by `src/error_types.py`. Its rules and the half weight were fixed
+on `dev` before `test` was looked at.
 
 ## Speed
 
-Not measured. The plan was RTFx (audio seconds / compute seconds, higher is faster) for every
-model, timed the same way: audio in memory to text returned, model loading excluded, 5 warm-up
-clips, batch size 1, Colab T4, the same 100 `dev` clips. The timing pass was not completed, so we
-report no speed numbers rather than numbers measured in different ways on different machines.
+RTFx = audio seconds / compute seconds (higher is faster); RTF is its inverse. Every baseline was
+timed the same way by `src/timing.py`: the same 100 `dev` clips, batch size 1, 5 warm-up clips,
+from audio in memory to text returned, model loading excluded, on a Colab T4. Full table, notes
+and our fine-tuning times: [`results/runtime_table.md`](results/runtime_table.md), written by
+`src/runtime_table.py`. Batch size 1 compares the models under identical conditions; it is not
+their top speed.
+
+<!-- speed:start (copied from results/runtime_table.md by src/score_all.py, do not edit by hand) -->
+| Run | Model | Params (M) | Hardware | Precision | RTFx | RTF | Median s/clip | P95 s/clip |
+|---|---|---:|---|---|---:|---:|---:|---:|
+| `whisper-small-zeroshot` | openai/whisper-small | 242 | Tesla T4 | float16 | 13.54 | 0.074 | 0.401 | 0.889 |
+| `whisper-large-v3` | openai/whisper-large-v3 | 1543 | Tesla T4 | float16 | 5.64 | 0.177 | 1.062 | 1.801 |
+| `hitz-ctc` | HiTZ/stt_eu_conformer_ctc_large | 122 | Tesla T4 | float32 | 121.57 | 0.008 | 0.050 | 0.060 |
+| `hitz-transducer` | HiTZ/stt_eu_conformer_transducer_large | 119 | Tesla T4 | float32 | 90.28 | 0.011 | 0.067 | 0.091 |
+| `parakeet-v3-basque` | itzune/parakeet-tdt-0.6b-v3-basque | 627 | Tesla T4 | float32 | 67.01 | 0.015 | 0.089 | 0.119 |
+| `wav2vec2-bp1` | gttsehu/wav2vec2-xls-r-300m-bp1-es_eu | 315 | Tesla T4 | float16 | 118.15 | 0.008 | 0.056 | 0.066 |
+| `wav2vec2-cv-eu` | stefan-it/wav2vec2-large-xlsr-53-basque | 315 | Tesla T4 | float16 | 119.39 | 0.008 | 0.056 | 0.066 |
+| `mhubert-basque` | Ansu/mHubert-basque-ASR | 94 | Tesla T4 | float16 | 162.70 | 0.006 | 0.042 | 0.047 |
+<!-- speed:end -->
 
 ## How to reproduce
 
@@ -246,6 +265,11 @@ python src/run_nemo.py --run hitz-ctc --split test --manifest data/raw/manifests
 # 5. Scores
 python src/score_all.py                    # results tables, paired comparisons, this README's Results
 python src/plot_results.py                 # results/figures/wer_ci.png
+
+# 6. Speed (Colab T4)
+python src/timing.py --family whisper --model openai/whisper-large-v3 --name whisper-large-v3
+#   one line per baseline (--family whisper, ctc or nemo); all eight are listed in src/timing.py
+python src/runtime_table.py                # results/runtime_table.md
 python src/score_all.py --split dev        # the same on dev, for quick checks
 ```
 
@@ -261,8 +285,9 @@ normalises.
   checkpoint by `dev` WER every 500 steps. Same settings for every run; only the condition and the
   seed change. Run on an NVIDIA RTX 4070 Laptop GPU and an RTX 3080 Laptop GPU (each run's log in
   `results/runs/` names its GPU).
-- **Baselines:** NeMo models on a Colab T4; Hugging Face models on the RTX 4070 Laptop GPU or a
-  Colab T4 (each prediction's JSON names its hardware).
+- **Baselines:** NeMo models on a Colab T4; Hugging Face models on the RTX 4070 or RTX 3080
+  Laptop GPU (each prediction's JSON names its hardware).
+- **Timing:** Colab T4 for every baseline (`results/timing/`).
 
 ## Repository layout
 
@@ -283,6 +308,8 @@ normalises.
 | `src/normalize.py` | The scoring normalisation |
 | `src/score_all.py` | WER, CER, confidence intervals, paired comparisons; writes `results/` and this README's Results |
 | `src/plot_results.py` | Draws the confidence-interval figure from the results table |
+| `src/timing.py` | Measures speed the same way for every model |
+| `src/runtime_table.py` | Writes `results/runtime_table.md` from `results/timing/` and the training logs |
 | `src/error_types.py` | Splits each model's errors into types (word endings, numbers, other substitutions, deletions, insertions, repetition loops); writes `results/error_types.csv` and `report/error_analysis.md` |
 | `tests/` | `pytest` tests for the data, the cleaning, the normalisation and the scoring |
 | `results/predictions/` | One CSV (raw model output) and one JSON (settings, model revision, hardware, timing) per run and split |
@@ -290,12 +317,13 @@ normalises.
 | `results/results_table.*`, `results/paired_comparisons.csv`, `results/per_run_test.csv` | Test scores, written by `src/score_all.py` |
 | `results/results_table_dev.*`, `results/paired_comparisons_dev.csv`, `results/per_run_dev.csv` | The same on `dev`, for quick checks (`src/score_all.py --split dev`) |
 | `results/error_types.csv` | Error types per model and split, written by `src/error_types.py` |
+| `results/timing/` | One JSON per baseline: per-clip times on the same 100 `dev` clips, Colab T4 |
+| `results/runtime_table.md` | Speed (RTFx, RTF, median and 95th-percentile seconds per clip) and fine-tuning times |
 | `results/figures/` | PNG figures; `wer_ci.png` is drawn by `src/plot_results.py` |
 | `report/scoring_policy.md` | The frozen scoring rules |
 | `report/metric_justification.md` | Why WER, CER and RTFx, and which is the main metric |
 | `report/baseline_audit.md` | What each baseline was trained on, and whether it heard our test speakers |
 | `report/error_analysis.md` | Error types per model |
-| `report/presentation.pptx` | The presentation slides; every number on them comes from `results/` |
 
 Root files:
 
@@ -304,6 +332,8 @@ Root files:
 | `README.md` | This file |
 | `requirements.txt` | Pinned packages (`==`) for the data, cleaning, Whisper and wav2vec 2.0 runs, and scoring |
 | `requirements-nemo.txt` | Pinned packages for the three NeMo models, kept apart because NeMo needs library versions that clash with the main file |
+| `LICENSE` | MIT licence for our code; the data note says the corpus is CC0 1.0 |
+| `CITATION.md` | How to cite the corpus and every model we ran, with each model's licence |
 | `.gitignore` | Keeps model weights (`models/`), caches, secrets (`.env`) and notebook checkpoints out of the repository |
 
 Model weights are not committed: the fine-tuned checkpoints stay in `models/`, which is ignored.
@@ -313,15 +343,15 @@ The run code, training logs and predictions are committed.
 
 | Member | Work |
 |---|---|
-| Mahmut Örnek (coordinator) | Repository, raw sample, cleaning script and report, split report, data tests, seed-3 fine-tuning runs |
-| Shahem Hasunoglu | Scoring policy, normalisation, scoring and statistics, tests, metric justification, README, presentation |
+| Mahmut Örnek (coordinator) | Repository, raw sample, cleaning script and report, split report, data tests, seed-3 fine-tuning runs, whisper-large-v3 and mhubert-basque baselines, timing pass, fixes to the licence, citation and timing files |
+| Shahem Hasunoglu | Scoring policy, normalisation, scoring and statistics, tests, metric justification, README, slides |
 | Ibrahim Aliyev | Transcription and fine-tuning scripts, Whisper-small zero-shot and wav2vec 2.0 baselines, fine-tuning runs |
 | Tuğra Geler | NeMo baselines, baseline training-data audit, error analysis |
-| Seleni | Assigned: Whisper large-v3 and mHuBERT baselines, timing, licence and citation files |
+| Ahmed Seleni | LICENSE, CITATION.md, first versions of the timing and runtime-table scripts |
 
 Each member's own account of their work is in [`contributions/`](contributions/).
 
 ## Licence
 
-The corpus is CC0 1.0. Each pretrained model keeps the
+Our code: MIT, see [`LICENSE`](LICENSE). The corpus is CC0 1.0. How to cite them: [`CITATION.md`](CITATION.md). Each pretrained model keeps the
 licence on its model card.
