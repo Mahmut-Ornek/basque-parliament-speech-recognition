@@ -1,0 +1,29 @@
+{
+  "name": "mhubert-basque",
+  "model": "Ansu/mHubert-basque-ASR",
+  "revision": "f3b281edc9367681b5cb746c2a3c8e4c81362987",
+  "family": "ctc",
+  "training": "none (pretrained model as published)",
+  "split": "test",
+  "manifest": "data/raw/manifests/test.csv",
+  "clips": 1521,
+  "audio_hours": 2.809,
+  "decoding": "greedy CTC (argmax per frame), no language model",
+  "max_new_tokens": null,
+  "precision": "float16",
+  "batch_size": 16,
+  "hardware": "NVIDIA GeForce RTX 3080 Laptop GPU",
+  "versions": {
+    "python": "3.12.3",
+    "torch": "2.9.1+cu130",
+    "transformers": "5.19.0"
+  },
+  "model_load_seconds": 21.4,
+  "wall_seconds": 18.9,
+  "audio_decoding_seconds": 3.4,
+  "model_seconds": 15.6,
+  "seconds_per_clip": 0.0125,
+  "real_time_factor": 0.0019,
+  "clips_hitting_token_limit": 0,
+  "finished_utc": "2026-11-22T16:18:56Z"
+}

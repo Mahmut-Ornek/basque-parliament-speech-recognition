@@ -1,0 +1,29 @@
+{
+  "name": "whisper-large-v3",
+  "model": "openai/whisper-large-v3",
+  "revision": "06f233fe06e710322aca913c1bc4249a0d71fce1",
+  "family": "whisper",
+  "training": "none (pretrained model as published)",
+  "split": "test",
+  "manifest": "data/raw/manifests/test.csv",
+  "clips": 1521,
+  "audio_hours": 2.809,
+  "decoding": "greedy, language=eu (forced), task=transcribe, max_new_tokens=128",
+  "max_new_tokens": 128,
+  "precision": "float16",
+  "batch_size": 16,
+  "hardware": "NVIDIA GeForce RTX 3080 Laptop GPU",
+  "versions": {
+    "python": "3.12.3",
+    "torch": "2.9.1+cu130",
+    "transformers": "5.19.0"
+  },
+  "model_load_seconds": 24.0,
+  "wall_seconds": 858.2,
+  "audio_decoding_seconds": 4.8,
+  "model_seconds": 853.4,
+  "seconds_per_clip": 0.5642,
+  "real_time_factor": 0.0849,
+  "clips_hitting_token_limit": 101,
+  "finished_utc": "2026-11-22T16:18:09Z"
+}
