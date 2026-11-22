@@ -32,19 +32,28 @@ Because nobody in the team speaks Basque, every word error is assigned by a dete
 | `hitz-ctc` | 0.0475 | 0.0431 | -0.0044 | 166 | 18.4% | 0 | 352 | 309 | 75 | 0 (0.0%) |
 | `hitz-transducer` | 0.0428 | 0.0393 | -0.0034 | 131 | 16.1% | 0 | 294 | 334 | 54 | 0 (0.0%) |
 | `parakeet-v3-basque` | 0.0468 | 0.0425 | -0.0044 | 166 | 18.6% | 0 | 342 | 313 | 69 | 0 (0.0%) |
+| `wav2vec2-bp1` | 0.0467 | 0.0427 | -0.0041 | 155 | 17.4% | 0 | 346 | 318 | 69 | 0 (0.0%) |
 | `wav2vec2-cv-eu` | 0.3338 | 0.3130 | -0.0208 | 790 | 12.5% | 0 | 3,735 | 1,355 | 462 | 0 (0.0%) |
 | `whisper-small-zeroshot` | 1.0117 | 0.9912 | -0.0205 | 779 | 4.0% | 28 | 10,462 | 2,838 | 5,113 | 97 (6.4%) |
 
-### Our Contribution (Fine-Tuned Whisper-small)
+### Our Contribution (Fine-Tuned Whisper-small, All 3 Seeds)
 
 | Run | WER | Weighted WER | Δ WER | Suffix-only | Suffix % (of err) | Number | Other Sub | Del | Ins | Loop Clips |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| `ft-raw_seed3` | 0.2158 | 0.1991 | -0.0167 | 636 | 15.5% | 1 | 2,365 | 717 | 381 | 1 (0.1%) |
-| `ft-rawmatched_seed3` | 0.2226 | 0.2062 | -0.0164 | 624 | 14.8% | 2 | 2,485 | 757 | 361 | 0 (0.0%) |
+| `ft-authors_seed1` | 0.2159 | 0.1996 | -0.0163 | 618 | 15.1% | 2 | 2,439 | 691 | 351 | 1 (0.1%) |
+| `ft-authors_seed2` | 0.2182 | 0.2016 | -0.0166 | 631 | 15.2% | 2 | 2,470 | 700 | 342 | 1 (0.1%) |
 | `ft-authors_seed3` | 0.2158 | 0.1994 | -0.0164 | 623 | 15.2% | 1 | 2,428 | 724 | 323 | 0 (0.0%) |
+| `ft-ours_seed1` | 0.2184 | 0.2015 | -0.0170 | 644 | 15.5% | 1 | 2,450 | 684 | 370 | 1 (0.1%) |
+| `ft-ours_seed2` | 0.2250 | 0.2076 | -0.0174 | 661 | 15.5% | 1 | 2,501 | 724 | 388 | 2 (0.1%) |
 | `ft-ours_seed3` | 0.2186 | 0.2019 | -0.0167 | 634 | 15.3% | 1 | 2,487 | 694 | 337 | 1 (0.1%) |
+| `ft-raw_seed1` | 0.2176 | 0.2003 | -0.0173 | 657 | 15.9% | 1 | 2,423 | 693 | 359 | 0 (0.0%) |
+| `ft-raw_seed2` | 0.2146 | 0.1984 | -0.0162 | 615 | 15.1% | 1 | 2,386 | 727 | 348 | 1 (0.1%) |
+| `ft-raw_seed3` | 0.2158 | 0.1991 | -0.0167 | 636 | 15.5% | 1 | 2,365 | 717 | 381 | 1 (0.1%) |
+| `ft-rawmatched_seed1` | 0.2229 | 0.2061 | -0.0168 | 639 | 15.1% | 1 | 2,480 | 743 | 372 | 0 (0.0%) |
+| `ft-rawmatched_seed2` | 0.2247 | 0.2083 | -0.0164 | 622 | 14.6% | 1 | 2,508 | 735 | 403 | 1 (0.1%) |
+| `ft-rawmatched_seed3` | 0.2226 | 0.2062 | -0.0164 | 624 | 14.8% | 2 | 2,485 | 757 | 361 | 0 (0.0%) |
 
-*(Note: Table covers all runs present in `results/predictions/` as of generation time; re-running `python src/error_types.py` automatically includes any newly pushed predictions.)*
+*(Note: Table covers all 18 runs currently in `results/predictions/`; re-running `python src/error_types.py` automatically includes any newly pushed baselines such as `whisper-large-v3` or `mhubert-basque`.)*
 
 ---
 
@@ -58,17 +67,25 @@ Because nobody in the team speaks Basque, every word error is assigned by a dete
 | `wav2vec2-bp1` | 0.0496 | 0.0452 | -0.0044 | 160 | 17.9% | 0 | 377 | 275 | 81 | 0 (0.0%) |
 | `wav2vec2-cv-eu` | 0.3050 | 0.2850 | -0.0200 | 721 | 13.1% | 0 | 3,226 | 1,266 | 279 | 0 (0.0%) |
 | `whisper-small-zeroshot` | 0.9711 | 0.9492 | -0.0219 | 790 | 4.5% | 17 | 9,921 | 2,410 | 4,347 | 74 (5.3%) |
-| `ft-raw_seed3` | 0.2088 | 0.1939 | -0.0149 | 536 | 14.3% | 0 | 2,190 | 609 | 425 | 1 (0.1%) |
-| `ft-rawmatched_seed3` | 0.2136 | 0.1990 | -0.0146 | 524 | 13.6% | 0 | 2,277 | 649 | 395 | 2 (0.1%) |
+| `ft-authors_seed1` | 0.2087 | 0.1936 | -0.0151 | 542 | 14.4% | 0 | 2,240 | 619 | 356 | 0 (0.0%) |
+| `ft-authors_seed2` | 0.2092 | 0.1944 | -0.0148 | 533 | 14.2% | 0 | 2,256 | 607 | 371 | 0 (0.0%) |
 | `ft-authors_seed3` | 0.2052 | 0.1905 | -0.0147 | 529 | 14.3% | 0 | 2,209 | 615 | 342 | 0 (0.0%) |
+| `ft-ours_seed1` | 0.2140 | 0.1993 | -0.0147 | 531 | 13.8% | 0 | 2,311 | 630 | 381 | 0 (0.0%) |
+| `ft-ours_seed2` | 0.2151 | 0.1994 | -0.0157 | 565 | 14.6% | 0 | 2,275 | 643 | 389 | 0 (0.0%) |
 | `ft-ours_seed3` | 0.2159 | 0.2004 | -0.0155 | 558 | 14.4% | 0 | 2,292 | 652 | 385 | 0 (0.0%) |
+| `ft-raw_seed1` | 0.2084 | 0.1940 | -0.0144 | 520 | 13.9% | 0 | 2,227 | 607 | 399 | 0 (0.0%) |
+| `ft-raw_seed2` | 0.2069 | 0.1919 | -0.0150 | 541 | 14.5% | 0 | 2,196 | 623 | 366 | 0 (0.0%) |
+| `ft-raw_seed3` | 0.2088 | 0.1939 | -0.0149 | 536 | 14.3% | 0 | 2,190 | 609 | 425 | 1 (0.1%) |
+| `ft-rawmatched_seed1` | 0.2154 | 0.2004 | -0.0150 | 541 | 13.9% | 0 | 2,318 | 645 | 374 | 0 (0.0%) |
+| `ft-rawmatched_seed2` | 0.2171 | 0.2012 | -0.0158 | 569 | 14.6% | 0 | 2,306 | 653 | 380 | 0 (0.0%) |
+| `ft-rawmatched_seed3` | 0.2136 | 0.1990 | -0.0146 | 524 | 13.6% | 0 | 2,277 | 649 | 395 | 2 (0.1%) |
 
 ---
 
 ## Key Findings
 
-**Which models fail on endings:** Basque is an agglutinative language, and suffix-only mismatches show up across every architecture—not just weak models. In absolute counts, out-of-domain models struggle the most on endings: `wav2vec2-cv-eu` makes 790 suffix-only errors on `test` (lowering WER by 2.08 percentage points under Weighted WER), and fine-tuned `whisper-small` models make 623–636 suffix-only errors (~1.65 points of Weighted WER relief). Strikingly, even the top in-domain baselines (`hitz-ctc`, `hitz-transducer`, `parakeet-v3-basque`, and `wav2vec2-bp1` on `dev`) still incur **16.1%–18.6%** of all their errors purely on wrong word endings—meaning roughly one in six remaining errors on parliamentary Basque is morphological rather than lexical.
+**Which models fail on endings:** Basque is an agglutinative language, and suffix-only mismatches persist across every model family. In absolute volume, out-of-domain models produce the most ending errors: `wav2vec2-cv-eu` makes 790 suffix-only errors on `test` (lowering WER by 2.08 percentage points under Weighted WER), and the 12 fine-tuned `whisper-small` runs make 615–661 suffix-only errors (`1.62–1.74` percentage points of Weighted WER relief). Even the four strong in-domain baselines (`hitz-ctc`, `hitz-transducer`, `parakeet-v3-basque`, and `wav2vec2-bp1`) still incur **16.1%–18.6%** of all their `test` errors purely on wrong word endings (`131–166` suffix-only errors out of ~810–900 total errors)—showing that roughly one in six remaining errors on parliamentary Basque is morphological rather than lexical.
 
-**What fine-tuning fixed:** Fine-tuning `whisper-small` on Basque parliamentary audio virtually eliminated repetition loops and catastrophic hallucination. Zero-shot `whisper-small` entered repetition loops on **97 test clips (6.4%)** and **74 dev clips (5.3%)**, driving 5,113 test insertions and pushing its test WER above 1.0 (`1.0117`). Across all four fine-tuned `seed3` conditions, looping collapsed to **0–1 test clips (0.0%–0.1%)**, insertions dropped by more than 92% (to 323–381), deletions fell by ~75%, and non-suffix substitutions dropped by ~76%. Fine-tuning also learned the corpus's spelled-out number convention, cutting digit-based number errors from 28 on `test` (17 on `dev`) down to 1–2 on `test` (0 on `dev`).
+**What fine-tuning fixed:** Fine-tuning `whisper-small` on Basque parliamentary speech virtually eliminated repetition loops and severe hallucination across all three seeds. Zero-shot `whisper-small` entered repetition loops on **97 test clips (6.4%)** and **74 dev clips (5.3%)**, driving 5,113 test insertions and pushing its test WER above 1.0 (`1.0117`). Across all 12 fine-tuned runs (`seed1–3` × 4 cleaning conditions), looping collapsed to **0–2 test clips (0.0%–0.1%)**, insertions dropped by more than 92% (to `323–403`), deletions fell by `73%–76%` (to `684–757`), and non-suffix substitutions dropped by `76%–77%` (to `2,365–2,508`). Fine-tuning also learned the corpus's spelled-out number convention, cutting digit-based number errors from 28 on `test` (17 on `dev`) down to `1–2` on `test` and `0` across every single `dev` run.
 
-**What fine-tuning did not fix:** Despite cutting overall WER by nearly 80 percentage points (from `1.0117` to `0.2158–0.2226`), fine-tuning on ~10–20 hours of parliamentary speech only modestly reduced absolute suffix-only errors (from 779 in zero-shot to 623–636 across the fine-tuned runs). As a result, morphological ending errors actually became a larger share of the remaining error budget (rising from 4.0% to **14.8%–15.5%**). Likewise, standard lexical substitutions (`other_sub`: 2,365–2,487) and deletions (694–757) remain an order of magnitude higher than in the Conformer/Parakeet baselines trained on hundreds of hours of Basque speech, and the four cleaning conditions (`ft-raw`, `ft-rawmatched`, `ft-authors`, `ft-ours`) exhibit nearly identical error-type distributions.
+**What fine-tuning did not fix:** Despite cutting overall test WER by nearly 80 percentage points (from `1.0117` to `0.2146–0.2250`), fine-tuning on ~10–20 hours of parliamentary audio only modestly reduced absolute suffix-only errors (from 779 in zero-shot to `615–661` across the 12 runs). As a result, morphological ending errors grew from 4.0% to **14.6%–15.9%** of the remaining error budget. Lexical substitutions (`2,365–2,508`) and deletions (`684–757`) also remain roughly an order of magnitude higher than in the in-domain baselines (`hitz-*`, `parakeet-v3-basque`, `wav2vec2-bp1`). Across all three seeds, the four cleaning conditions (`ft-raw`, `ft-rawmatched`, `ft-authors`, `ft-ours`) exhibit nearly identical error-type proportions, indicating that cleaning strategy differences do not disproportionately target any single error class.
